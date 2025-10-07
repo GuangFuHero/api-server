@@ -2,16 +2,17 @@ from typing import List, Optional, Type, TypeVar
 
 from fastapi import HTTPException
 from pydantic import BaseModel
-from sqlalchemy import exists, and_
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from sqlalchemy import and_, exists
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
+from sqlmodel import SQLModel
 
-from . import models
-from .schemas import SupplyCreate, SupplyItemDistribution
-from .pin_related import generate_pin
 from .enum_serializer import *
+from .models import Supply, SupplyItem
+from .pin_related import generate_pin
+from .schemas import SupplyCreate, SupplyItemDistribution
 
-ModelType = TypeVar("ModelType", bound=models.Base)
+ModelType = TypeVar("ModelType", bound=SQLModel)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 
@@ -20,7 +21,9 @@ def get_by_id(db: Session, model: Type[ModelType], id: str) -> Optional[ModelTyp
     return db.query(model).filter(model.id == id).first()
 
 
-def get_multi(db: Session, model: Type[ModelType], skip: int = 0, limit: int = 100, **filters) -> List[Type[ModelType]]:
+def get_multi(
+    db: Session, model: Type[ModelType], skip: int = 0, limit: int = 100, **filters
+) -> List[Type[ModelType]]:
     query = db.query(model)
     if filters:
         query = query.filter_by(**normalize_filters_dict(filters))  # Enum to value
@@ -48,7 +51,9 @@ def create(db: Session, model: Type[ModelType], obj_in: CreateSchemaType) -> Mod
     return db_obj
 
 
-def create_with_input(db: Session, model: Type[ModelType], obj_in: CreateSchemaType, **kwargs) -> ModelType:
+def create_with_input(
+    db: Session, model: Type[ModelType], obj_in: CreateSchemaType, **kwargs
+) -> ModelType:
     """
     建立資料列（帶額外 kwargs）：
     - 同樣進行型別正規化，避免 Enum 直接傳入。
@@ -82,7 +87,8 @@ def update(db: Session, db_obj: ModelType, obj_in: UpdateSchemaType) -> ModelTyp
 # for supply
 # =====================
 
-def create_supply_with_items(db: Session, obj_in: SupplyCreate) -> models.Supply:
+
+def create_supply_with_items(db: Session, obj_in: SupplyCreate) -> Supply:
     """
     建立供應單與其多個物資項目（若提供），在同一個交易中完成。
     - 為 Supply 自動產生 valid_pin
@@ -93,13 +99,13 @@ def create_supply_with_items(db: Session, obj_in: SupplyCreate) -> models.Supply
         # 1) 建立 Supply 主體
         supply_data_raw = obj_in.model_dump(exclude={"supplies"}, exclude_unset=True)
         supply_data = normalize_payload_dict(supply_data_raw)  # Enum to value
-        db_supply = models.Supply(**supply_data, valid_pin=generate_pin())
+        db_supply = Supply(**supply_data, valid_pin=generate_pin())
         db.add(db_supply)
         db.flush()  # 先拿到 db_supply.id 供 items 關聯
 
         # 2) 若有 supplies，批量建立
         items_in: List = getattr(obj_in, "supplies", []) or []
-        db_items: List[models.SupplyItem] = []
+        db_items: List[SupplyItem] = []
 
         for idx, item_in in enumerate(items_in, start=1):
             item_data_raw = item_in.model_dump(exclude_unset=True)
@@ -107,15 +113,22 @@ def create_supply_with_items(db: Session, obj_in: SupplyCreate) -> models.Supply
 
             total_number = item_data.get("total_number", None)
             if total_number is None or total_number <= 0:
-                raise HTTPException(status_code=400, detail=f"第 {idx} 個物資 total_number 必須是正整數")
+                raise HTTPException(
+                    status_code=400, detail=f"第 {idx} 個物資 total_number 必須是正整數"
+                )
 
             received_count = item_data.get("received_count", 0) or 0
             if received_count < 0:
-                raise HTTPException(status_code=400, detail=f"第 {idx} 個物資 received_count 不可為負數")
+                raise HTTPException(
+                    status_code=400, detail=f"第 {idx} 個物資 received_count 不可為負數"
+                )
             if received_count > total_number:
-                raise HTTPException(status_code=400, detail=f"第 {idx} 個物資 received_count 不可超過 total_number")
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"第 {idx} 個物資 received_count 不可超過 total_number",
+                )
 
-            db_item = models.SupplyItem(
+            db_item = SupplyItem(
                 supply_id=db_supply.id,
                 total_number=total_number,
                 tag=item_data.get("tag"),
@@ -146,7 +159,9 @@ def create_supply_with_items(db: Session, obj_in: SupplyCreate) -> models.Supply
         raise HTTPException(status_code=500, detail="建立供應單時發生未預期錯誤")
 
 
-def distribute_items(db: Session, supply_id: str, items_to_distribute: List[SupplyItemDistribution]) -> Optional[List[models.SupplyItem]]:
+def distribute_items(
+    db: Session, supply_id: str, items_to_distribute: List[SupplyItemDistribution]
+) -> Optional[List[SupplyItem]]:
     """
     批次更新指定 supply_id 底下多筆 SupplyItem 的 received_count。
     這是一個原子操作（transaction），若其中任何一筆更新失敗（例如 ID 無效或超出總量），
@@ -158,10 +173,10 @@ def distribute_items(db: Session, supply_id: str, items_to_distribute: List[Supp
             return []
 
         db_items = (
-            db.query(models.SupplyItem)
+            db.query(SupplyItem)
             .filter(
-                models.SupplyItem.supply_id == supply_id,
-                models.SupplyItem.id.in_(item_ids_to_update),
+                SupplyItem.supply_id == supply_id,
+                SupplyItem.id.in_(item_ids_to_update),
             )
             .with_for_update()
             .all()
@@ -205,7 +220,7 @@ def get_full_supply(db: Session, query) -> models.Supply:
     not_fulfilled_exists = exists().where(
         and_(
             models.SupplyItem.supply_id == models.Supply.id,
-            models.SupplyItem.received_count < models.SupplyItem.total_number
+            models.SupplyItem.received_count < models.SupplyItem.total_number,
         )
     )
     return query.filter(not_fulfilled_exists)
