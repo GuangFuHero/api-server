@@ -1,6 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 
+from config.config import Config
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from psycopg2 import errors
@@ -10,7 +11,6 @@ from starlette.responses import JSONResponse
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 from . import database
-from .config import settings
 from .routers import (
     accommodations,
     human_resources,
@@ -36,21 +36,11 @@ async def lifespan(app: FastAPI):
     yield
 
 
-# --- 根據環境動態設定 Swagger UI 的伺服器 URL ---
-servers = [
-    {"url": "http://localhost:8080", "description": "本地開發 (Dev)"},
-]
-if settings.ENVIRONMENT == "prod":
-    servers.insert(
-        0, {"url": settings.PROD_SERVER_URL, "description": "線上服務 (Production)"}
-    )
-
 # --- 建立 FastAPI 應用實例 ---
 app = FastAPI(
-    title=settings.APP_TITLE,
+    title=Config.OPS.APP_TITLE,
     version="v1.1.0",
     description="光復主站api",
-    servers=servers,
     lifespan=lifespan,  # 使用 lifespan
     swagger_ui_parameters={
         "defaultModelsExpandDepth": -1,  # 隱藏model schema

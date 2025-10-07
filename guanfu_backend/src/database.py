@@ -1,16 +1,16 @@
 from typing import Generator
-from sqlalchemy import create_engine, URL
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
 
-from .config import settings
+from config.config import Config
+from sqlalchemy import URL, create_engine
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 # 讀取設定
-ENVIRONMENT = settings.ENVIRONMENT.lower()
-DB_USER = settings.DB_USER
-DB_PASS = settings.DB_PASS
-DB_NAME = settings.DB_NAME
-INSTANCE_CONNECTION_NAME = settings.INSTANCE_CONNECTION_NAME
-SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
+ENVIRONMENT = Config.OPS.DEPLOY_ENV.lower()
+DB_USER = Config.DB.DB_USERNAME
+DB_PASS = Config.DB.DB_PASSWORD
+DB_NAME = Config.DB.DB_NAME
+INSTANCE_CONNECTION_NAME = Config.DB.INSTANCE_CONNECTION_NAME
+SQLALCHEMY_DATABASE_URL = Config.DB.DATABASE_URL
 
 # 依環境切換 Engine
 if ENVIRONMENT in ("dev", "prod"):
