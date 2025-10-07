@@ -41,7 +41,7 @@ docker-compose --env-file .env.dev up -d postgres
 uvicorn src.main:app --reload
 ```
 
-訪問 http://localhost:8000/docs 查看 API 文件。
+訪問 http://localhost:8080/docs 查看 API 文件。
 
 ## 詳細安裝步驟
 
@@ -160,8 +160,8 @@ uvicorn src.main:app --reload
 
 伺服器啟動後，開啟瀏覽器訪問：
 
-- API 文件：http://localhost:8000/docs
-- 替代文件：http://localhost:8000/redoc
+- API 文件：http://localhost:8080/docs
+- 替代文件：http://localhost:8080/redoc
 
 **優點：**
 - 程式碼變更立即生效（hot reload）
