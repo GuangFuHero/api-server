@@ -5,7 +5,6 @@ from sqlalchemy import Boolean, Column, Enum, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
-from ..enums import GeneralStatusEnum, MentalHealthDurationEnum, MentalHealthFormatEnum
 from .base import BaseCRUDModel, TimestampModel
 
 
@@ -17,19 +16,14 @@ def generate_uuid_str():
 class MentalHealthResourceBase(SQLModel):
     """Base class for MentalHealthResource with common fields"""
 
-    duration_type: MentalHealthDurationEnum = Field(
-        sa_column=Column(Enum(MentalHealthDurationEnum), nullable=False)
-    )
+    duration_type: str = Field(max_length=255)
+
     name: str = Field(max_length=255)
-    service_format: MentalHealthFormatEnum = Field(
-        sa_column=Column(Enum(MentalHealthFormatEnum), nullable=False)
-    )
+    service_format: str = Field(max_length=255)
     service_hours: str = Field(max_length=255)
     contact_info: str = Field(max_length=500)
     is_free: bool = Field(sa_column=Column(Boolean, nullable=False))
-    status: GeneralStatusEnum = Field(
-        sa_column=Column(Enum(GeneralStatusEnum), nullable=False)
-    )
+    status: str = Field(max_length=255)
     emergency_support: bool = Field(sa_column=Column(Boolean, nullable=False))
     website_url: Optional[str] = Field(default=None, max_length=500)
     target_audience: Optional[List[str]] = Field(default=None, sa_column=Column(JSONB))

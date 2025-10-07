@@ -5,7 +5,6 @@ from sqlalchemy import Column, Enum, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
-from ..enums import AccommodationVacancyEnum, GeneralStatusEnum
 from .base import BaseCRUDModel, TimestampModel
 
 
@@ -19,16 +18,12 @@ class AccommodationBase(SQLModel):
 
     township: str = Field(max_length=255)
     name: str = Field(max_length=255)
-    has_vacancy: AccommodationVacancyEnum = Field(
-        sa_column=Column(Enum(AccommodationVacancyEnum), nullable=False)
-    )
+    has_vacancy: str = Field(max_length=255)
     available_period: str = Field(max_length=255)
     contact_info: str = Field(max_length=500)
     address: str = Field(max_length=500)
     pricing: str = Field(max_length=255)
-    status: GeneralStatusEnum = Field(
-        sa_column=Column(Enum(GeneralStatusEnum), nullable=False)
-    )
+    status: str = Field(max_length=255)
     restrictions: Optional[str] = Field(default=None, max_length=500)
     room_info: Optional[str] = Field(default=None, max_length=500)
     coordinates: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSONB))

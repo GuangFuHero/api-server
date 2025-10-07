@@ -32,7 +32,7 @@ def list_shelters(
     # results = await db.execute(shelters)
     shelters = crud.get_multi(db, Shelter, skip=offset, limit=limit, **filters)
     total = crud.count(db, Shelter, **filters)
-    return {"member": shelters, "totalItems": 1, "limit": limit, "offset": offset}
+    return {"member": shelters, "totalItems": total, "limit": limit, "offset": offset}
 
 
 @router.post("/", response_model=schemas.Shelter, status_code=201, summary="建立庇護所")

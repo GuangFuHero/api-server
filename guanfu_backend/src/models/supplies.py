@@ -5,7 +5,6 @@ from typing import Optional
 from sqlalchemy import BigInteger, Column, Enum, Integer, String, Text, func
 from sqlmodel import Field, Relationship, SQLModel
 
-from ..enums import SupplyItemTypeEnum
 from .base import BaseCRUDModel
 
 
@@ -57,9 +56,7 @@ class SupplyItemBase(SQLModel):
     """Base class for SupplyItem with common fields"""
 
     total_number: int = Field()
-    tag: SupplyItemTypeEnum = Field(
-        sa_column=Column(Enum(SupplyItemTypeEnum), nullable=False)
-    )
+    tag: str = Field(max_length=255)
     name: Optional[str] = Field(default=None, max_length=255)
     received_count: Optional[int] = Field(default=None)
     unit: Optional[str] = Field(default=None, max_length=50)

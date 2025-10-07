@@ -21,6 +21,7 @@ class DBConfig(BaseSettings):
     DB_HOST: str = Field(..., env="DB_HOST")
     DB_PORT: int = Field(default=5432, env="DB_PORT")
     DATABASE_URL: str | None = None
+    DATABASE_URL_ASYNC: str | None = None
     DB_LOG: bool = Field(default=False, env="DB_LOG")
     INSTANCE_CONNECTION_NAME: str | None = Field(
         env="INSTANCE_CONNECTION_NAME", default=None
@@ -39,6 +40,13 @@ class DBConfig(BaseSettings):
                     f"DB_PORT environment variable must be an integer, got {value}"
                 )
         return value
+
+    @field_validator("DATABASE_URL_ASYNC", mode="before")
+    def assemble_db_connection_async(cls, value, info) -> str:
+        if value is not None:
+            return value
+        values = info.data
+        return f"postgresql+asyncpg://{values.get('DB_USERNAME')}:{values.get('DB_PASSWORD')}@{values.get('DB_HOST')}:{values.get('DB_PORT')}/{values.get('DB_NAME')}"
 
     @field_validator("DATABASE_URL", mode="before")
     def assemble_db_connection(cls, value, info) -> str:

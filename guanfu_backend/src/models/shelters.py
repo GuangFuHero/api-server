@@ -5,7 +5,6 @@ from sqlalchemy import Column, Enum, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
-from ..enums import ShelterStatusEnum
 from .base import BaseCRUDModel, TimestampModel
 
 
@@ -21,9 +20,7 @@ class ShelterBase(SQLModel):
     location: str = Field(max_length=255)
     phone: str = Field(max_length=50)
     link: Optional[str] = Field(default=None, max_length=500)
-    status: ShelterStatusEnum = Field(
-        sa_column=Column(Enum(ShelterStatusEnum), nullable=False)
-    )
+    status: str = Field(max_length=255)
     capacity: Optional[int] = Field(default=None)
     current_occupancy: Optional[int] = Field(default=None)
     available_spaces: Optional[int] = Field(default=None)

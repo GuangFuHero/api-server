@@ -5,7 +5,6 @@ from sqlalchemy import Boolean, Column, Enum, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
-from ..enums import GeneralStatusEnum, ShowerFacilityTypeEnum
 from .base import BaseCRUDModel, TimestampModel
 
 
@@ -19,15 +18,11 @@ class ShowerStationBase(SQLModel):
 
     name: str = Field(max_length=255)
     address: str = Field(max_length=500)
-    facility_type: ShowerFacilityTypeEnum = Field(
-        sa_column=Column(Enum(ShowerFacilityTypeEnum), nullable=False)
-    )
+    facility_type: str = Field(max_length=255)
     time_slots: str = Field(max_length=255)
     available_period: str = Field(max_length=255)
     is_free: bool = Field(sa_column=Column(Boolean, nullable=False))
-    status: GeneralStatusEnum = Field(
-        sa_column=Column(Enum(GeneralStatusEnum), nullable=False)
-    )
+    status: str = Field(max_length=255)
     requires_appointment: bool = Field(sa_column=Column(Boolean, nullable=False))
     coordinates: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSONB))
     phone: Optional[str] = Field(default=None, max_length=50)

@@ -18,7 +18,7 @@ if Config.OPS.DEPLOY_ENV == "TEST":
         "postgresql+asyncpg://postgres:postgres@localhost:5433/test",
     )
 else:
-    config.set_main_option("sqlalchemy.url", Config.DB.DATABASE_URL)
+    config.set_main_option("sqlalchemy.url", Config.DB.DATABASE_URL_ASYNC)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

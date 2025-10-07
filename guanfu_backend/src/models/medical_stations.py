@@ -5,7 +5,6 @@ from sqlalchemy import Column, Enum, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
-from ..enums import GeneralStatusEnum, MedicalStationTypeEnum
 from .base import BaseCRUDModel, TimestampModel
 
 
@@ -17,13 +16,11 @@ def generate_uuid_str():
 class MedicalStationBase(SQLModel):
     """Base class for MedicalStation with common fields"""
 
-    station_type: MedicalStationTypeEnum = Field(
-        sa_column=Column(Enum(MedicalStationTypeEnum), nullable=False)
-    )
+    station_type: str = Field(max_length=255)
+
     name: str = Field(max_length=255)
-    status: GeneralStatusEnum = Field(
-        sa_column=Column(Enum(GeneralStatusEnum), nullable=False)
-    )
+    status: str = Field(max_length=255)
+
     location: Optional[str] = Field(default=None, max_length=255)
     detailed_address: Optional[str] = Field(default=None, max_length=500)
     phone: Optional[str] = Field(default=None, max_length=50)

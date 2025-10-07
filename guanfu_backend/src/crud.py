@@ -216,11 +216,11 @@ def distribute_items(
         return None
 
 
-def get_full_supply(db: Session, query) -> models.Supply:
+def get_full_supply(db: Session, query) -> Supply:
     not_fulfilled_exists = exists().where(
         and_(
-            models.SupplyItem.supply_id == models.Supply.id,
-            models.SupplyItem.received_count < models.SupplyItem.total_number,
+            SupplyItem.supply_id == Supply.id,
+            SupplyItem.received_count < SupplyItem.total_number,
         )
     )
     return query.filter(not_fulfilled_exists)

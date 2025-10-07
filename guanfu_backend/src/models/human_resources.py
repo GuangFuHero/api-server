@@ -6,12 +6,6 @@ from sqlalchemy import BigInteger, Boolean, Column, Enum, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
-from ..enums import (
-    GeneralStatusEnum,
-    HumanResourceExperienceLevelEnum,
-    HumanResourceRoleStatusEnum,
-    HumanResourceRoleTypeEnum,
-)
 from .base import BaseCRUDModel, TimestampModel
 
 
@@ -26,25 +20,17 @@ class HumanResourceBase(SQLModel):
     org: str = Field(max_length=255)
     address: str = Field(max_length=500)
     phone: str = Field(max_length=50)
-    status: GeneralStatusEnum = Field(
-        sa_column=Column(Enum(GeneralStatusEnum), nullable=False)
-    )
+    status: str = Field(max_length=255)
     is_completed: bool = Field(sa_column=Column(Boolean, nullable=False))
     role_name: str = Field(max_length=255)
-    role_type: HumanResourceRoleTypeEnum = Field(
-        sa_column=Column(Enum(HumanResourceRoleTypeEnum), nullable=False)
-    )
+    role_type: str = Field(max_length=255)
     headcount_need: int = Field()
     headcount_got: int = Field()
-    role_status: HumanResourceRoleStatusEnum = Field(
-        sa_column=Column(Enum(HumanResourceRoleStatusEnum), nullable=False)
-    )
+    role_status: str = Field(max_length=255)
     has_medical: Optional[bool] = Field(default=None, sa_column=Column(Boolean))
     skills: Optional[List[str]] = Field(default=None, sa_column=Column(JSONB))
     certifications: Optional[List[str]] = Field(default=None, sa_column=Column(JSONB))
-    experience_level: Optional[HumanResourceExperienceLevelEnum] = Field(
-        default=None, sa_column=Column(Enum(HumanResourceExperienceLevelEnum))
-    )
+    experience_level: Optional[str] = Field(default=None, max_length=255)
     language_requirements: Optional[List[str]] = Field(
         default=None, sa_column=Column(JSONB)
     )
