@@ -248,6 +248,7 @@ class Supply(Base):
     supplies = relationship("SupplyItem", back_populates="supply", cascade="all, delete-orphan")
     pii_date = Column(BigInteger, nullable=False, default=current_timestamp_int)
     valid_pin = Column(String)
+    spam_warn = Column(Boolean)
 
 
 class SupplyItem(Base):

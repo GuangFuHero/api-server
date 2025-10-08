@@ -111,7 +111,7 @@ def create_supply_with_items(db: Session, obj_in: SupplyCreate) -> models.Supply
         # 1) 建立 Supply 主體
         supply_data_raw = obj_in.model_dump(exclude={"supplies"}, exclude_unset=True)
         supply_data = normalize_payload_dict(supply_data_raw)  # Enum to value
-        db_supply = models.Supply(**supply_data, valid_pin=generate_pin())
+        db_supply = models.Supply(**supply_data, valid_pin=generate_pin(), spam_warn=False)
         db.add(db_supply)
         db.flush()  # 先拿到 db_supply.id 供 items 關聯
 

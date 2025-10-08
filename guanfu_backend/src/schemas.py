@@ -622,10 +622,12 @@ class SupplyPatch(BaseModel):
     phone: Optional[str] = None
     notes: Optional[str] = None
     valid_pin: Optional[str] = None
+    spam_warn: Optional[bool] = None
 
 
 class Supply(SupplyBase, BaseColumn):
     supplies: List[SupplyItem] = []
+    spam_warn: Optional[bool] = None
 
     class Config:
         from_attributes = True
