@@ -228,3 +228,11 @@ def get_full_supply(db: Session, query) -> models.Supply:
         )
     )
     return query.filter(not_fulfilled_exists)
+
+def is_completed_supply(supply: models.Supply) -> bool:
+    """Check whether the supply is completed"""
+    is_compelete = True
+    for item in supply.supplies:
+        if item.total_number != item.received_count:
+            is_compelete = False
+    return is_compelete

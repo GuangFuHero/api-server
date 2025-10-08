@@ -71,6 +71,8 @@ def patch_human_resource(
         raise HTTPException(status_code=404, detail="Human Resource not found")
     if db_resource.valid_pin and db_resource.valid_pin != resource_in.valid_pin:
         raise HTTPException(status_code=400, detail="The PIN you entered is incorrect.")
+    if db_resource.status == HumanResourceRoleStatusEnum.completed.value:
+        raise HTTPException(status_code=400, detail="Completed data cannot be edited.")
     # validate num
     if resource_in.headcount_need is not None or resource_in.headcount_got is not None:
         if resource_in.headcount_need == resource_in.headcount_got:

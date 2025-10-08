@@ -53,6 +53,9 @@ def patch_supply(
     if db_supply is None:
         raise HTTPException(status_code=404, detail="Supply not found")
 
+    if crud.is_completed_supply(db_supply):
+        raise HTTPException(status_code=400, detail="Completed supply orders cannot be edited.")
+
     # PIN 檢核
     if db_supply.valid_pin and db_supply.valid_pin != supply_in.valid_pin:
         raise HTTPException(status_code=400, detail="The PIN you entered is incorrect.")
