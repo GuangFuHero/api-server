@@ -3,6 +3,8 @@ services:
     image: postgres:16
     container_name: postgres
     restart: unless-stopped
+    env_file:
+      - ./.env
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -11,8 +13,15 @@ services:
       - "5432:5432"
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
+      - .env:/app/src/.env:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
-      - guanfu-network
+      - db-network
 
   backend:
     build:
@@ -20,20 +29,41 @@ services:
       dockerfile: Dockerfile
     container_name: guanfu-backend
     restart: unless-stopped
+    env_file:
+      - ./.env
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       ENVIRONMENT: ${ENVIRONMENT}
       APP_TITLE: ${APP_TITLE}
-      DB_USER: ${DB_USER}
-      DB_PASS: ${DB_PASS}
-      DB_NAME: ${DB_NAME}
+    volumes:
+      - .env:/app/src/.env:ro
     ports:
-      - "8080:8080"
+      - "8000:8080"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    networks:
+      - guanfu-network
+      - db-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - backend
     networks:
       - guanfu-network
 
 networks:
   guanfu-network:
+    driver: bridge
+  db-network:
     driver: bridge
