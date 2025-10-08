@@ -33,17 +33,17 @@ def list_human_resources(
         "role_status": role_status,
         "role_type": role_type,
     }
-    
+
     order_by = None
     if order_by_time == "asc":
         order_by = models.HumanResource.created_at.asc()
     elif order_by_time == "desc":
         order_by = models.HumanResource.created_at.desc()
-    
+
     resources = crud.get_multi(
-        db, 
-        models.HumanResource, 
-        skip=offset, 
+        db,
+        models.HumanResource,
+        skip=offset,
         limit=limit,
         order_by=order_by,
         **filters
