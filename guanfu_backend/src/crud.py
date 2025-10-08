@@ -21,10 +21,12 @@ def get_by_id(db: Session, model: Type[ModelType], id: str) -> Optional[ModelTyp
     return db.query(model).filter(model.id == id).first()
 
 
-def get_multi(db: Session, model: Type[ModelType], skip: int = 0, limit: int = 100, **filters) -> List[Type[ModelType]]:
+def get_multi(db: Session, model: Type[ModelType], skip: int = 0, limit: int = 100, order_by=None, **filters) -> List[Type[ModelType]]:
     query = db.query(model)
     if filters:
-        query = query.filter_by(**normalize_filters_dict(filters))  # Enum to value
+        query = query.filter_by(**{k: v for k, v in filters.items() if v is not None})
+    if order_by is not None:
+        query = query.order_by(order_by)
     return query.offset(skip).limit(limit).all()
 
 
@@ -112,7 +114,7 @@ def create_supply_with_items(db: Session, obj_in: SupplyCreate) -> models.Supply
         # 1) 建立 Supply 主體
         supply_data_raw = obj_in.model_dump(exclude={"supplies"}, exclude_unset=True)
         supply_data = normalize_payload_dict(supply_data_raw)  # Enum to value
-        db_supply = models.Supply(**supply_data, valid_pin=generate_pin(), spam_warn=False)
+        db_supply = models.Supply(**supply_data, valid_pin=generate_pin())
         db.add(db_supply)
         db.flush()  # 先拿到 db_supply.id 供 items 關聯
 
