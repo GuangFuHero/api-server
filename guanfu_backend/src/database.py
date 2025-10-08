@@ -53,6 +53,13 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
+def init_db():
+    # 在這裡導入所有定義了 Base 的 model，這樣它們才會被正確認識
+    # 依賴於 Base 的 metadata。
+    from . import models  # noqa
+    Base.metadata.create_all(bind=engine)
+
+
 def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
     try:
