@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
 
 # --- 根據環境動態設定 Swagger UI 的伺服器 URL ---
 servers = [
-    {"url": "http://localhost:8080", "description": "本地開發 (Dev)"},
+    {"url": f"http://localhost:{settings.SERVER_PORT}", "description": "本地開發 (Dev)"},
     {"url": f"{settings.LAN_SERVER_URL}:{settings.SERVER_PORT}", "description": "LAN 主機環境 (Test On LAN)"},
 ]
 if settings.ENVIRONMENT == "prod":
