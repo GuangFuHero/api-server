@@ -12,7 +12,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=schemas.MentalHealthResourceCollection, summary="取得心理健康資源清單")
+@router.get("", response_model=schemas.MentalHealthResourceCollection, summary="取得心理健康資源清單")
 def list_mental_health_resources(
         status: Optional[MentalHealthResourceStatusEnum] = Query(None),
         duration_type: Optional[MentalHealthDurationEnum] = Query(None),
@@ -34,7 +34,7 @@ def list_mental_health_resources(
     return {"member": resources, "totalItems": total, "limit": limit, "offset": offset}
 
 
-@router.post("/", response_model=schemas.MentalHealthResource, status_code=201, summary="建立心理健康資源")
+@router.post("", response_model=schemas.MentalHealthResource, status_code=201, summary="建立心理健康資源")
 def create_mental_health_resource(
         resource_in: schemas.MentalHealthResourceCreate, db: Session = Depends(get_db)
 ):

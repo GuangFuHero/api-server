@@ -13,7 +13,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=schemas.HumanResourceCollection, summary="取得人力需求清單")
+@router.get("", response_model=schemas.HumanResourceCollection, summary="取得人力需求清單")
 def list_human_resources(
         status: Optional[HumanResourceStatusEnum] = Query(None),
         role_status: Optional[HumanResourceRoleStatusEnum] = Query(None),
@@ -35,7 +35,7 @@ def list_human_resources(
     return {"member": resources, "totalItems": total, "limit": limit, "offset": offset}
 
 
-@router.post("/", response_model=schemas.HumanResourceWithPin, status_code=201, summary="建立人力需求")
+@router.post("", response_model=schemas.HumanResourceWithPin, status_code=201, summary="建立人力需求")
 def create_human_resource(
         resource_in: schemas.HumanResourceCreate, db: Session = Depends(get_db)
 ):

@@ -13,7 +13,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=schemas.WaterRefillStationCollection, summary="取得飲用水補給站清單")
+@router.get("", response_model=schemas.WaterRefillStationCollection, summary="取得飲用水補給站清單")
 def list_water_refill_stations(
         status: Optional[str] = Query(None),
         water_type: Optional[str] = Query(None),
@@ -37,7 +37,7 @@ def list_water_refill_stations(
     return {"member": stations, "totalItems": total, "limit": limit, "offset": offset}
 
 
-@router.post("/", response_model=schemas.WaterRefillStation, status_code=201, summary="建立飲用水補給站")
+@router.post("", response_model=schemas.WaterRefillStation, status_code=201, summary="建立飲用水補給站")
 def create_water_refill_station(
         station_in: schemas.WaterRefillStationCreate, db: Session = Depends(get_db)
 ):

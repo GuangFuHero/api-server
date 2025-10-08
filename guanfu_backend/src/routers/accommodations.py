@@ -12,7 +12,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=schemas.AccommodationCollection, summary="取得庇護所清單")
+@router.get("", response_model=schemas.AccommodationCollection, summary="取得庇護所清單")
 def list_accommodations(
         status: Optional[AccommodationStatusEnum] = Query(None),
         township: Optional[str] = Query(None),
@@ -34,7 +34,7 @@ def list_accommodations(
     return {"member": accommodations, "totalItems": total, "limit": limit, "offset": offset}
 
 
-@router.post("/", response_model=schemas.Accommodation, status_code=201, summary="建立庇護所")
+@router.post("", response_model=schemas.Accommodation, status_code=201, summary="建立庇護所")
 def create_accommodation(
         accommodation_in: schemas.AccommodationCreate, db: Session = Depends(get_db)
 ):
