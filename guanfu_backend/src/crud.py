@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy import exists, and_
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.orm import Session
+from sqlalchemy.inspection import inspect as sa_inspect
 
 from . import models
 from .schemas import SupplyCreate, SupplyItemDistribution
@@ -25,6 +26,23 @@ def get_multi(db: Session, model: Type[ModelType], skip: int = 0, limit: int = 1
     if filters:
         query = query.filter_by(**normalize_filters_dict(filters))  # Enum to value
     return query.offset(skip).limit(limit).all()
+
+
+def mask_id_if_complete(rows):
+    """When the status is 'complete', set the id to an empty string"""
+    def orm_to_dict(obj: Any) -> dict:
+        """orm -> dict"""
+        mapper = sa_inspect(obj).mapper
+        data = {c.key: getattr(obj, c.key) for c in mapper.column_attrs}
+        return data
+
+    out: List[dict] = []
+    for r in rows:
+        data = orm_to_dict(r)
+        if data.get("status") == "completed":
+            data["id"] = ""
+        out.append(data)
+    return out
 
 
 def count(db: Session, model: Type[ModelType], **filters) -> int:
