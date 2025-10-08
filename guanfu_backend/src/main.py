@@ -1,25 +1,49 @@
+import logging
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from psycopg2 import errors
+from sqlalchemy.exc import IntegrityError
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
-from fastapi.exceptions import RequestValidationError
-from sqlalchemy.exc import IntegrityError
-from psycopg2 import errors
 
+from . import database
 from .config import settings
 from .routers import (
-    shelters, reports, volunteer_organizations, accommodations,
-    human_resources, medical_stations, mental_health_resources,
-    restrooms, shower_stations, water_refill_stations,
-    supplies, supply_items
+    accommodations,
+    human_resources,
+    medical_stations,
+    mental_health_resources,
+    reports,
+    restrooms,
+    shelters,
+    shower_stations,
+    supplies,
+    supply_items,
+    volunteer_organizations,
+    water_refill_stations,
 )
+
+
+# --- Lifespan Management ---
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup:
+    # Create database tables to prevent "relation does not exist" errors
+    database.init_db()
+    yield
+
 
 # --- 根據環境動態設定 Swagger UI 的伺服器 URL ---
 servers = [
-    {"url": "http://localhost:8000", "description": "本地開發 (Dev)"},
+    {"url": "http://localhost:8080", "description": "本地開發 (Dev)"},
 ]
 if settings.ENVIRONMENT == "prod":
-    servers.insert(0, {"url": settings.PROD_SERVER_URL, "description": "線上服務 (Production)"})
+    servers.insert(
+        0, {"url": settings.PROD_SERVER_URL, "description": "線上服務 (Production)"}
+    )
 
 # --- 建立 FastAPI 應用實例 ---
 app = FastAPI(
@@ -27,16 +51,18 @@ app = FastAPI(
     version="v1.1.0",
     description="光復主站api",
     servers=servers,
+    lifespan=lifespan,  # 使用 lifespan
     swagger_ui_parameters={
         "defaultModelsExpandDepth": -1,  # 隱藏model schema
         "docExpansion": "none",  # 預設label收起
-    }
+    },
 )
 
 
 # ===================================================================
 # 全域異常處理器 (Global Exception Handlers)
 # ===================================================================
+
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -89,7 +115,6 @@ async def integrity_error_exception_handler(request: Request, exc: IntegrityErro
         detail = f"Foreign key constraint '{constraint_name}' failed. The referenced record may not exist."
         return JSONResponse(status_code=400, content={"detail": detail})
 
-    import logging
     logging.error(f"Unhandled IntegrityError: {exc}")
     return JSONResponse(
         status_code=500,

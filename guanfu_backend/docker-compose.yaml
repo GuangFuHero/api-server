@@ -21,9 +21,12 @@ services:
     container_name: guanfu-backend
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DATABASE_URL: ${DATABASE_URL}
       ENVIRONMENT: ${ENVIRONMENT}
       APP_TITLE: ${APP_TITLE}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
     ports:
       - "8080:8080"
     depends_on:
