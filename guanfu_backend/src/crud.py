@@ -28,18 +28,19 @@ def get_multi(db: Session, model: Type[ModelType], skip: int = 0, limit: int = 1
     return query.offset(skip).limit(limit).all()
 
 
-def mask_id_if_complete(rows):
-    """When the status is 'complete', set the id to an empty string"""
-    def orm_to_dict(obj: Any) -> dict:
-        """orm -> dict"""
-        mapper = sa_inspect(obj).mapper
-        data = {c.key: getattr(obj, c.key) for c in mapper.column_attrs}
-        return data
+def orm_to_dict(obj: Any) -> dict:
+    """orm -> dict"""
+    mapper = sa_inspect(obj).mapper
+    data = {c.key: getattr(obj, c.key) for c in mapper.column_attrs}
+    return data
 
+
+def mask_id_if_field_equals(rows, field: str, value: bool|str):
+    """When the field is value, set the id to an empty string"""
     out: List[dict] = []
     for r in rows:
         data = orm_to_dict(r)
-        if data.get("status") == "completed":
+        if data.get(field) == value:
             data["id"] = ""
         out.append(data)
     return out

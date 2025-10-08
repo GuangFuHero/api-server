@@ -31,7 +31,7 @@ def list_human_resources(
         "role_type": role_type,
     }
     resources = crud.get_multi(db=db, model=models.HumanResource, skip=offset, limit=limit, **filters)
-    resources = crud.mask_id_if_complete(resources)
+    resources = crud.mask_id_if_field_equals(resources, "status", "completed")
     total = crud.count(db, models.HumanResource, **filters)
     return {"member": resources, "totalItems": total, "limit": limit, "offset": offset}
 
