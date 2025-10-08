@@ -11,7 +11,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=schemas.ReportCollection, summary="取得回報事件清單")
+@router.get("", response_model=schemas.ReportCollection, summary="取得回報事件清單")
 def list_reports(
         status: Optional[bool] = Query(None),
         limit: int = Query(50, ge=1, le=500),
@@ -27,7 +27,7 @@ def list_reports(
     return {"member": reports, "totalItems": total, "limit": limit, "offset": offset}
 
 
-@router.post("/", response_model=schemas.Report, status_code=201, summary="建立回報事件")
+@router.post("", response_model=schemas.Report, status_code=201, summary="建立回報事件")
 def create_report(
         report_in: schemas.ReportCreate, db: Session = Depends(get_db)
 ):

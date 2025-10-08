@@ -14,7 +14,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=schemas.SupplyItemCollection, summary="取得特定供應單物資項目清單")
+@router.get("", response_model=schemas.SupplyItemCollection, summary="取得特定供應單物資項目清單")
 def list_supply_items(
         supply_id: Optional[str] = Query(None),
         tag: Optional[SupplyItemTypeEnum] = Query(None),
@@ -31,7 +31,7 @@ def list_supply_items(
     return {"member": items, "totalItems": total, "limit": limit, "offset": offset}
 
 
-@router.post("/", response_model=schemas.SupplyItem, status_code=201, summary="建立特定供應單物資項目")
+@router.post("", response_model=schemas.SupplyItem, status_code=201, summary="建立特定供應單物資項目")
 def create_supply_item(
         item_in: schemas.SupplyItemCreateWithPin, db: Session = Depends(get_db)
 ):

@@ -11,7 +11,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=schemas.ShelterCollection, summary="取得庇護所清單")
+@router.get("", response_model=schemas.ShelterCollection, summary="取得庇護所清單")
 def list_shelters(
         status: Optional[ShelterStatusEnum] = Query(None),
         limit: int = Query(50, ge=1, le=500),
@@ -27,7 +27,7 @@ def list_shelters(
     return {"member": shelters, "totalItems": total, "limit": limit, "offset": offset}
 
 
-@router.post("/", response_model=schemas.Shelter, status_code=201, summary="建立庇護所")
+@router.post("", response_model=schemas.Shelter, status_code=201, summary="建立庇護所")
 def create_shelter(
         shelter_in: schemas.ShelterCreate, db: Session = Depends(get_db)
 ):

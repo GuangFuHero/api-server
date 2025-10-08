@@ -12,7 +12,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=schemas.RestroomCollection, summary="取得廁所點清單")
+@router.get("", response_model=schemas.RestroomCollection, summary="取得廁所點清單")
 def list_restrooms(
         status: Optional[RestroomStatusEnum] = Query(None),
         facility_type: Optional[RestroomFacilityTypeEnum] = Query(None),
@@ -38,7 +38,7 @@ def list_restrooms(
     return {"member": restrooms, "totalItems": total, "limit": limit, "offset": offset}
 
 
-@router.post("/", response_model=schemas.Restroom, status_code=201, summary="建立廁所點")
+@router.post("", response_model=schemas.Restroom, status_code=201, summary="建立廁所點")
 def create_restroom(
         restroom_in: schemas.RestroomCreate, db: Session = Depends(get_db)
 ):

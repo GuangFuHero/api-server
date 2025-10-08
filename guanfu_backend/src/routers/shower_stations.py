@@ -14,7 +14,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=schemas.ShowerStationCollection, summary="取得洗澡點清單")
+@router.get("", response_model=schemas.ShowerStationCollection, summary="取得洗澡點清單")
 def list_shower_stations(
         status: Optional[ShowerStationStatusEnum] = Query(None),
         facility_type: Optional[ShowerFacilityTypeEnum] = Query(None),
@@ -38,7 +38,7 @@ def list_shower_stations(
     return {"member": stations, "totalItems": total, "limit": limit, "offset": offset}
 
 
-@router.post("/", response_model=schemas.ShowerStation, status_code=201, summary="建立洗澡點")
+@router.post("", response_model=schemas.ShowerStation, status_code=201, summary="建立洗澡點")
 def create_shower_station(
         station_in: schemas.ShowerStationCreate, db: Session = Depends(get_db)
 ):

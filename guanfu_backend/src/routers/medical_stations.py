@@ -12,7 +12,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=schemas.MedicalStationCollection, summary="取得醫療站清單")
+@router.get("", response_model=schemas.MedicalStationCollection, summary="取得醫療站清單")
 def list_medical_stations(
         status: Optional[MedicalStationStatusEnum] = Query(None),
         station_type: Optional[MedicalStationTypeEnum] = Query(None),
@@ -29,7 +29,7 @@ def list_medical_stations(
     return {"member": stations, "totalItems": total, "limit": limit, "offset": offset}
 
 
-@router.post("/", response_model=schemas.MedicalStation, status_code=201, summary="建立醫療站")
+@router.post("", response_model=schemas.MedicalStation, status_code=201, summary="建立醫療站")
 def create_medical_station(
         station_in: schemas.MedicalStationCreate, db: Session = Depends(get_db)
 ):

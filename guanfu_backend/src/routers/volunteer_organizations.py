@@ -11,7 +11,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=schemas.VolunteerOrgCollection, summary="取得志工招募單位清單")
+@router.get("", response_model=schemas.VolunteerOrgCollection, summary="取得志工招募單位清單")
 def list_volunteer_orgs(
         limit: int = Query(20, ge=1, le=200),
         offset: int = Query(0, ge=0),
@@ -25,7 +25,7 @@ def list_volunteer_orgs(
     return {"member": orgs, "totalItems": total, "limit": limit, "offset": offset}
 
 
-@router.post("/", response_model=schemas.VolunteerOrganization, status_code=201, summary="建立志工招募單位")
+@router.post("", response_model=schemas.VolunteerOrganization, status_code=201, summary="建立志工招募單位")
 def create_volunteer_org(
         org_in: schemas.VolunteerOrgCreate, db: Session = Depends(get_db)
 ):
