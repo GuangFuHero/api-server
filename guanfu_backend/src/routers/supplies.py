@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
-from typing import Optional
+from typing import Optional, Literal
 from .. import crud, models, schemas
 from ..crud import get_full_supply
 from ..database import get_db
@@ -17,19 +17,36 @@ def list_supplies(
         embed: Optional[str] = Query(None, enum=["all"]),
         limit: int = Query(50, ge=1, le=500),
         offset: int = Query(0, ge=0),
-        show_fulfilled: bool = Query(False, description="是否顯示已全部到貨的供應單"),
+        order_by: Optional[Literal["asc", "desc"]] = Query(None, description="時間排序方式：asc 或 desc"),
         db: Session = Depends(get_db)
 ):
-    query = db.query(models.Supply)
+    """
+    取得供應單清單 (分頁)
+    
+    - order_by: 指定時間排序方式，可選 "asc" (由舊到新) 或 "desc" (由新到舊)
+    """
+    order_clause = None
+    if order_by == "asc":
+        order_clause = models.Supply.created_at.asc()
+    elif order_by == "desc":
+        order_clause = models.Supply.created_at.desc()
+    
+    supplies = crud.get_multi(
+        db, 
+        model=models.Supply, 
+        skip=offset, 
+        limit=limit, 
+        order_by=order_clause
+    )
+    
     if embed == "all":
-        query = query.options(joinedload(models.Supply.supplies))
+        supplies = db.query(models.Supply).options(
+            joinedload(models.Supply.supplies)
+        ).filter(models.Supply.id.in_([s.id for s in supplies])).all()
+    
+    # 使用 crud.count 取得總數
+    total = crud.count(db, model=models.Supply)
 
-    # 排除「所有項目均已滿」的供應單
-    if not show_fulfilled:
-        query = get_full_supply(db, query)
-
-    total = query.count()
-    supplies = query.offset(offset).limit(limit).all()
     return {"member": supplies, "totalItems": total, "limit": limit, "offset": offset}
 
 
