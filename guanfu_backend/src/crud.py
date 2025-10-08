@@ -17,10 +17,12 @@ def get_by_id(db: Session, model: Type[ModelType], id: str) -> Optional[ModelTyp
     return db.query(model).filter(model.id == id).first()
 
 
-def get_multi(db: Session, model: Type[ModelType], skip: int = 0, limit: int = 100, **filters) -> List[Type[ModelType]]:
+def get_multi(db: Session, model: Type[ModelType], skip: int = 0, limit: int = 100, order_by=None, **filters) -> List[Type[ModelType]]:
     query = db.query(model)
     if filters:
         query = query.filter_by(**{k: v for k, v in filters.items() if v is not None})
+    if order_by is not None:
+        query = query.order_by(order_by)
     return query.offset(skip).limit(limit).all()
 
 
@@ -73,17 +75,19 @@ def create_supply_with_items(db: Session, obj_in: SupplyCreate) -> models.Supply
     # 2. 建立主體 Supply 物件的實例
     db_supply = models.Supply(**supply_data, valid_pin=generate_pin())
     db.add(db_supply)
+    db.flush() #執行 INSERT 以取得 db_supply.id
 
     # 3. 檢查是否有提供第一個物資項目的資料
     if nested_item_data:
         # 4. 建立 SupplyItem 物件的實例
-        #    - **nested_item_data.model_dump(): 將巢状 Pydantic 物件轉為字典
+        #    - **item_data.model_dump(): 將巢状 Pydantic 物件轉為字典
         #    - **supply_id=db_supply.id: 關鍵步驟！將剛剛建立的 Supply 物件的 id 關聯過去
-        db_item = models.SupplyItem(
-            **nested_item_data.model_dump(),
-            supply_id=db_supply.id
-        )
-        db.add(db_item)
+        for item_data in nested_item_data:
+            db_item = models.SupplyItem(
+                **item_data.model_dump(),
+                supply_id=db_supply.id
+            )
+            db.add(db_item)
 
     db.commit()
 
