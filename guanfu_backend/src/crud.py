@@ -20,10 +20,12 @@ def get_by_id(db: Session, model: Type[ModelType], id: str) -> Optional[ModelTyp
     return db.query(model).filter(model.id == id).first()
 
 
-def get_multi(db: Session, model: Type[ModelType], skip: int = 0, limit: int = 100, **filters) -> List[Type[ModelType]]:
+def get_multi(db: Session, model: Type[ModelType], skip: int = 0, limit: int = 100, order_by=None, **filters) -> List[Type[ModelType]]:
     query = db.query(model)
     if filters:
-        query = query.filter_by(**normalize_filters_dict(filters))  # Enum to value
+        query = query.filter_by(**{k: v for k, v in filters.items() if v is not None})
+    if order_by is not None:
+        query = query.order_by(order_by)
     return query.offset(skip).limit(limit).all()
 
 
