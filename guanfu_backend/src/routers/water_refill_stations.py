@@ -1,10 +1,11 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session
 
 from .. import crud, models, schemas
 from ..database import get_db
+from ..api_key import require_modify_api_key
 
 router = APIRouter(
     prefix="/water_refill_stations",
@@ -58,7 +59,12 @@ def get_water_refill_station(id: str, db: Session = Depends(get_db)):
     return db_station
 
 
-@router.patch("/{id}", response_model=schemas.WaterRefillStation, summary="更新特定飲用水補給站")
+@router.patch(
+    "/{id}",
+    response_model=schemas.WaterRefillStation,
+    summary="更新特定飲用水補給站",
+    dependencies=[Security(require_modify_api_key)],
+)
 def patch_water_refill_station(
         id: str, station_in: schemas.WaterRefillStationPatch, db: Session = Depends(get_db)
 ):

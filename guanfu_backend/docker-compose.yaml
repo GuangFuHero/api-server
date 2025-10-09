@@ -35,6 +35,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       ENVIRONMENT: ${ENVIRONMENT}
       APP_TITLE: ${APP_TITLE}
+      ALLOW_MODIFY_API_KEY_LIST: ${ALLOW_MODIFY_API_KEY_LIST}
     volumes:
       - .env:/app/src/.env:ro
     ports:

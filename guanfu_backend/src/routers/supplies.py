@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List, Literal
 from .. import crud, models, schemas
 from ..crud import get_full_supply
 from ..database import get_db
+from ..api_key import require_modify_api_key
 
 router = APIRouter(
     prefix="/supplies",
@@ -62,7 +63,13 @@ def create_supply(
 
 
 # 在 patch_supply 禁止更新已全部到貨的供應單
-@router.patch("/{id}", response_model=schemas.Supply, status_code=200, summary="更新供應單")
+@router.patch(
+    "/{id}",
+    response_model=schemas.Supply,
+    status_code=200,
+    summary="更新供應單",
+    dependencies=[Security(require_modify_api_key)],
+)
 def patch_supply(
         id: str, supply_in: schemas.SupplyPatch, db: Session = Depends(get_db)
 ):

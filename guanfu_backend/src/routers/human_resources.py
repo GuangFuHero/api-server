@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session
 from typing import Optional, Literal
 from .. import crud, models, schemas
 from ..database import get_db
 from ..enum_serializer import HumanResourceRoleStatusEnum, HumanResourceRoleTypeEnum, HumanResourceStatusEnum
 from ..pin_related import generate_pin
+from ..api_key import require_modify_api_key
 
 router = APIRouter(
     prefix="/human_resources",
@@ -76,7 +77,12 @@ def get_human_resource(id: str, db: Session = Depends(get_db)):
     return db_resource
 
 
-@router.patch("/{id}", response_model=schemas.HumanResource, summary="更新特定人力需求")
+@router.patch(
+    "/{id}",
+    response_model=schemas.HumanResource,
+    summary="更新特定人力需求",
+    dependencies=[Security(require_modify_api_key)],
+)
 def patch_human_resource(
         id: str, resource_in: schemas.HumanResourcePatch, db: Session = Depends(get_db)
 ):

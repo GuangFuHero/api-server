@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session
 from typing import Optional
 from .. import crud, models, schemas
 from ..database import get_db
+from ..api_key import require_modify_api_key
 from ..schemas import ShelterStatusEnum
 router = APIRouter(
     prefix="/shelters",
@@ -48,7 +49,12 @@ def get_shelter(id: str, db: Session = Depends(get_db)):
     return db_shelter
 
 
-@router.patch("/{id}", response_model=schemas.Shelter, summary="更新特定庇護所")
+@router.patch(
+    "/{id}",
+    response_model=schemas.Shelter,
+    summary="更新特定庇護所",
+    dependencies=[Security(require_modify_api_key)],
+)
 def patch_shelter(
         id: str, shelter_in: schemas.ShelterPatch, db: Session = Depends(get_db)
 ):
