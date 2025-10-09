@@ -1,10 +1,11 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session
 
 from .. import crud, models, schemas
 from ..database import get_db
+from ..api_key import require_modify_api_key
 
 router = APIRouter(
     prefix="/supply_providers",
@@ -50,7 +51,13 @@ def create_supply_provider(
     return crud.create(db, models.SupplyProvider, obj_in=provider_in)
 
 
-@router.patch("/{id}", response_model=schemas.SupplyProvider, summary="更新特定物資供應提供者")
+@router.patch(
+        "/{id}",
+        response_model=schemas.SupplyProvider,
+        status_code=200,
+        summary="更新特定物資供應提供者",
+        dependencies=[Security(require_modify_api_key)],
+)
 def patch_supply_provider(
         id: str, provider_in: schemas.SupplyProviderPatch, db: Session = Depends(get_db)
 ):
