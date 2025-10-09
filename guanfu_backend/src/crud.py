@@ -2,7 +2,7 @@ from typing import List, Optional, Type, TypeVar
 
 from fastapi import HTTPException
 from pydantic import BaseModel
-from sqlalchemy import exists, and_
+from sqlalchemy import exists, and_, or_
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.inspection import inspect as sa_inspect
@@ -247,11 +247,19 @@ def distribute_items(db: Session, supply_id: str, items_to_distribute: List[Supp
         return None
 
 
-def get_full_supply(db: Session, query) -> models.Supply:
+def filter_incomplete_supplies(db: Session, query) -> models.Supply:
+    """
+    過濾出未完成的供應單（至少有一個物資項目未完全到貨）。
+    - 物資項目的 received_count < total_number 視為未完成
+    - 物資項目的 received_count 為 NULL 也視為未完成（尚未開始接收）
+    """
     not_fulfilled_exists = exists().where(
         and_(
             models.SupplyItem.supply_id == models.Supply.id,
-            models.SupplyItem.received_count < models.SupplyItem.total_number
+            or_(
+                models.SupplyItem.received_count < models.SupplyItem.total_number,
+                models.SupplyItem.received_count.is_(None)
+            )
         )
     )
     return query.filter(not_fulfilled_exists)
