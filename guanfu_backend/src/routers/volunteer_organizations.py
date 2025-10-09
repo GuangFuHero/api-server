@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session
 
 from .. import crud, models, schemas
 from ..database import get_db
+from ..api_key import require_modify_api_key
 
 router = APIRouter(
     prefix="/volunteer_organizations",
@@ -46,7 +47,12 @@ def get_volunteer_org(id: str, db: Session = Depends(get_db)):
     return db_org
 
 
-@router.patch("/{id}", response_model=schemas.VolunteerOrganization, summary="更新特定志工招募單位")
+@router.patch(
+    "/{id}",
+    response_model=schemas.VolunteerOrganization,
+    summary="更新特定志工招募單位",
+    dependencies=[Security(require_modify_api_key)],
+)
 def patch_volunteer_org(
         id: str, org_in: schemas.VolunteerOrgPatch, db: Session = Depends(get_db)
 ):

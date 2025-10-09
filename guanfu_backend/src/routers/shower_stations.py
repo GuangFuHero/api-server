@@ -1,10 +1,11 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session
 
 from .. import crud, models, schemas
 from ..database import get_db
+from ..api_key import require_modify_api_key
 from ..enum_serializer import ShowerFacilityTypeEnum, ShowerStationStatusEnum
 
 router = APIRouter(
@@ -59,7 +60,12 @@ def get_shower_station(id: str, db: Session = Depends(get_db)):
     return db_station
 
 
-@router.patch("/{id}", response_model=schemas.ShowerStation, summary="更新特定洗澡點")
+@router.patch(
+    "/{id}",
+    response_model=schemas.ShowerStation,
+    summary="更新特定洗澡點",
+    dependencies=[Security(require_modify_api_key)],
+)
 def patch_shower_station(
         id: str, station_in: schemas.ShowerStationPatch, db: Session = Depends(get_db)
 ):

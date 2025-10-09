@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session
 from typing import Optional
 from .. import crud, models, schemas
 from ..database import get_db
+from ..api_key import require_modify_api_key
 from ..enum_serializer import MentalHealthDurationEnum, MentalHealthFormatEnum, MentalHealthResourceStatusEnum
 
 router = APIRouter(
@@ -55,7 +56,12 @@ def get_mental_health_resource(id: str, db: Session = Depends(get_db)):
     return db_resource
 
 
-@router.patch("/{id}", response_model=schemas.MentalHealthResource, summary="更新特定心理健康資源")
+@router.patch(
+    "/{id}",
+    response_model=schemas.MentalHealthResource,
+    summary="更新特定心理健康資源",
+    dependencies=[Security(require_modify_api_key)],
+)
 def patch_mental_health_resource(
         id: str, resource_in: schemas.MentalHealthResourcePatch, db: Session = Depends(get_db)
 ):

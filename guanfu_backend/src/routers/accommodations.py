@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session
 from typing import Optional
 from .. import crud, models, schemas
 from ..database import get_db
+from ..api_key import require_modify_api_key
 from ..enum_serializer import AccommodationVacancyEnum, AccommodationStatusEnum
 
 router = APIRouter(
@@ -55,7 +56,12 @@ def get_accommodation(id: str, db: Session = Depends(get_db)):
     return db_accommodation
 
 
-@router.patch("/{id}", response_model=schemas.Accommodation, summary="更新特定庇護所資料")
+@router.patch(
+    "/{id}",
+    response_model=schemas.Accommodation,
+    summary="更新特定庇護所資料",
+    dependencies=[Security(require_modify_api_key)],
+)
 def patch_accommodation(
         id: str, accommodation_in: schemas.AccommodationPatch, db: Session = Depends(get_db)
 ):

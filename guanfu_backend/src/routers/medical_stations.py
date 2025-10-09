@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session
 from typing import Optional
 from .. import crud, models, schemas
 from ..database import get_db
+from ..api_key import require_modify_api_key
 from ..enum_serializer import MedicalStationTypeEnum, MedicalStationStatusEnum
 
 router = APIRouter(
@@ -50,7 +51,12 @@ def get_medical_station(id: str, db: Session = Depends(get_db)):
     return db_station
 
 
-@router.patch("/{id}", response_model=schemas.MedicalStation, summary="更新特定醫療站")
+@router.patch(
+    "/{id}",
+    response_model=schemas.MedicalStation,
+    summary="更新特定醫療站",
+    dependencies=[Security(require_modify_api_key)],
+)
 def patch_medical_station(
         id: str, station_in: schemas.MedicalStationPatch, db: Session = Depends(get_db)
 ):
