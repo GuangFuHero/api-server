@@ -261,6 +261,8 @@ class AccommodationBase(BaseModel):
 class AccommodationCreate(AccommodationBase):
     status: AccommodationStatusEnum
     has_vacancy: AccommodationVacancyEnum
+    available_period: Optional[str] = None
+    pricing:Optional[str] = None
 
 
 class AccommodationPatch(BaseModel):
