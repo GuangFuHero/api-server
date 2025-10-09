@@ -288,3 +288,40 @@ class SupplyProvider(Base):
     provide_unit = Column(String)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+
+
+class LineUser(Base):
+    __tablename__ = "line_users"
+    id = Column(String, primary_key=True, default=generate_uuid_str)
+    # OIDC claims
+    line_user_id = Column(String, unique=True, index=True)
+    display_name = Column(String)
+    picture_url = Column(String)
+    email = Column(String)
+    email_granted = Column(Boolean, default=False)  # 是否開啟 email 權限
+    scopes = Column(Text)
+    amr = Column(Text)  # Authentication Method Reference
+    last_login_at = Column(DateTime)
+
+    # Token 與過期
+    access_token = Column(Text)
+    refresh_token = Column(Text)
+    id_token = Column(Text)
+    token_expires_at = Column(DateTime)
+
+    # 管理欄位
+    channel_id = Column(String)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+
+class LineSessionState(Base):
+    __tablename__ = "line_session_states"
+    id = Column(String, primary_key=True, default=generate_uuid_str)
+    state = Column(String, unique=True, index=True)
+    nonce = Column(String)
+    code_verifier = Column(String)
+    created_at = Column(DateTime, default=func.now())
+    consumed = Column(Boolean, default=False)
+    expires_at = Column(DateTime)
+
