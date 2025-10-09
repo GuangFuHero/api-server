@@ -86,9 +86,9 @@ def update(db: Session, db_obj: ModelType, obj_in: UpdateSchemaType) -> ModelTyp
 
 def create_supply_with_items(db: Session, obj_in: SupplyCreate) -> models.Supply:
     """
-    建立供應單與其多個物資項目（若提供），在同一個交易中完成。
+    建立供應單與其單一物資項目（若提供），在同一個交易中完成。
     - 為 Supply 自動產生 valid_pin
-    - 為每個 SupplyItem 套用預設值與基本防呆檢核
+    - 為 SupplyItem 套用預設值與基本防呆檢核
     - 正規化 payload，避免 Enum 帶入
     """
     try:
@@ -97,26 +97,33 @@ def create_supply_with_items(db: Session, obj_in: SupplyCreate) -> models.Supply
         supply_data = normalize_payload_dict(supply_data_raw)  # Enum to value
         db_supply = models.Supply(**supply_data, valid_pin=generate_pin())
         db.add(db_supply)
-        db.flush()  # 先拿到 db_supply.id 供 items 關聯
+        db.flush()  # 先拿到 db_supply.id 供 item 關聯
 
-        # 2) 若有 supplies，批量建立
-        items_in: List = getattr(obj_in, "supplies", []) or []
-        db_items: List[models.SupplyItem] = []
+        # 2) 若有 supplies（單一物件），建立一筆物資
+        item_in: Optional[object] = getattr(obj_in, "supplies", None)
+        if item_in is not None:
+            # Pydantic 模型或 dict 都支援，優先使用 model_dump
+            if hasattr(item_in, "model_dump"):
+                item_data_raw = item_in.model_dump(exclude_unset=True)
+            elif isinstance(item_in, dict):
+                item_data_raw = item_in
+            else:
+                raise HTTPException(status_code=400, detail="supplies 格式不正確，請提供物件")
 
-        for idx, item_in in enumerate(items_in, start=1):
-            item_data_raw = item_in.model_dump(exclude_unset=True)
             item_data = normalize_payload_dict(item_data_raw)  # Enum to value
 
-            total_number = item_data.get("total_number", None)
-            if total_number is None or total_number <= 0:
-                raise HTTPException(status_code=400, detail=f"第 {idx} 個物資 total_number 必須是正整數")
+            # 防呆檢核
+            total_number = item_data.get("total_number")
+            if total_number is None or not isinstance(total_number, int) or total_number <= 0:
+                raise HTTPException(status_code=400, detail="物資 total_number 必須是正整數")
 
             received_count = item_data.get("received_count", 0) or 0
-            if received_count < 0:
-                raise HTTPException(status_code=400, detail=f"第 {idx} 個物資 received_count 不可為負數")
+            if not isinstance(received_count, int) or received_count < 0:
+                raise HTTPException(status_code=400, detail="物資 received_count 不可為負數")
             if received_count > total_number:
-                raise HTTPException(status_code=400, detail=f"第 {idx} 個物資 received_count 不可超過 total_number")
+                raise HTTPException(status_code=400, detail="物資 received_count 不可超過 total_number")
 
+            # 建立單一 SupplyItem
             db_item = models.SupplyItem(
                 supply_id=db_supply.id,
                 total_number=total_number,
@@ -125,10 +132,7 @@ def create_supply_with_items(db: Session, obj_in: SupplyCreate) -> models.Supply
                 received_count=received_count,
                 unit=item_data.get("unit"),
             )
-            db_items.append(db_item)
-
-        if db_items:
-            db.add_all(db_items)
+            db.add(db_item)
 
         # 3) 提交交易
         db.commit()
