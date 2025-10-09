@@ -510,6 +510,8 @@ class HumanResourceCreate(HumanResourceBase):
     role_type: HumanResourceRoleTypeEnum
     role_status: HumanResourceRoleStatusEnum
     experience_level: Optional[HumanResourceExperienceLevelEnum] = None
+    is_completed: Optional[bool] = False
+    headcount_got: Optional[int] = 0
 
 
 class HumanResourcePatch(BaseModel):
