@@ -1,0 +1,44 @@
+name: Deploy to GCP
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Deploying version: ${VERSION}"
+
+      - name: Deploy to GCP VM via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: deploy
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: 22
+          script: |
+            cd /home/deploy/api-server
+            ./deploy.sh ${{ steps.get_version.outputs.version }}
+
+      - name: Verify deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: deploy
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: 22
+          script: |
+            cd /home/deploy/api-server/guanfu_backend
+            docker-compose ps
+            curl -f http://localhost:8000/docs || echo "Warning: Backend health check failed"

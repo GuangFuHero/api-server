@@ -46,6 +46,26 @@ services:
       - guanfu-network
       - db-network
 
+  db-backup:
+    build:
+      context: .
+      dockerfile: Dockerfile.dbbackup
+    container_name: postgres-backup
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    env_file:
+      - ./.env
+    volumes:
+      - ./scripts/backup.sh:/backup.sh:ro
+      - ./backups:/backups
+    entrypoint: >
+      bash -c "printenv > /etc/environment &&
+               echo '0 */2 * * * . /etc/environment; /backup.sh >> /var/log/cron.log 2>&1' | crontab - &&
+               cron -f"
+    networks:
+      - db-network
+
   nginx:
     image: nginx:alpine
     container_name: nginx

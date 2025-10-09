@@ -13,7 +13,8 @@ INSTANCE_CONNECTION_NAME = settings.INSTANCE_CONNECTION_NAME
 SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
 
 # 依環境切換 Engine
-if ENVIRONMENT in ("dev", "prod"):
+# if ENVIRONMENT in ("dev", "prod"): # We don't use cloudrun now, default in else
+if ENVIRONMENT in ("cloudrun"):
     # 使用 Cloud SQL 的 Unix Socket（Cloud Run 環境）
     unix_socket_path = f"/cloudsql/{INSTANCE_CONNECTION_NAME}"
     engine = create_engine(
@@ -57,6 +58,7 @@ def init_db():
     # 在這裡導入所有定義了 Base 的 model，這樣它們才會被正確認識
     # 依賴於 Base 的 metadata。
     from . import models  # noqa
+
     Base.metadata.create_all(bind=engine)
 
 
