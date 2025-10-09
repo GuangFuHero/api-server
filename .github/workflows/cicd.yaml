@@ -2,6 +2,8 @@ name: Deploy to GCP
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "v*.*.*"
 
@@ -13,10 +15,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Extract version from tag
+      - name: Extract version from tag or branch
         id: get_version
         run: |
-          VERSION=${GITHUB_REF#refs/tags/}
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION="latest"
+          fi
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "Deploying version: ${VERSION}"
 

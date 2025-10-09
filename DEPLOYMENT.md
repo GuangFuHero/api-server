@@ -102,9 +102,17 @@ curl http://localhost:8000/docs
 
 ## 自動化部署流程
 
-### 部署步驟
+### 部署方式
 
-1. **打 Git Tag 並推送**
+#### 方式 1: 推送到 main branch（部署最新版）
+
+```bash
+git push origin main
+```
+
+這會自動執行 `./deploy.sh latest`，部署最新的 main branch 代碼。
+
+#### 方式 2: 打 Git Tag（部署特定版本）
 
 ```bash
 # 創建並推送 tag
@@ -112,8 +120,15 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-2. **GitHub Actions 自動執行**
+這會自動執行 `./deploy.sh v1.0.0`，部署指定的版本。
 
+### 部署流程
+
+1. **觸發條件**
+   - 推送到 main branch，或
+   - 推送 tag（格式：`v*.*.*`）
+
+2. **GitHub Actions 自動執行**
    - 觸發 `.github/workflows/cicd.yaml`
    - SSH 連接到 GCP VM
    - 執行 `deploy.sh` 腳本
