@@ -1,12 +1,12 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from .. import crud, models, schemas
 from ..database import get_db
-from ..middleware.app_auth import admin_authorization
+from ..middleware.api_key import admin_authorization
 from ..schemas import (
     MarqueeAnnouncement,
     MarqueeAnnouncementCollection,
@@ -53,7 +53,7 @@ def list_marquee_announcements(
     "",
     response_model=MarqueeAnnouncement,
     summary="新增跑馬燈",
-    dependencies=[Depends(admin_authorization)],
+    dependencies=[Security(admin_authorization)],
 )
 def create_marquee_announcement(
     announcement: MarqueeAnnouncementCreate, db: Session = Depends(get_db)
@@ -65,7 +65,7 @@ def create_marquee_announcement(
     "/{id}",
     response_model=MarqueeAnnouncement,
     summary="更新跑馬燈",
-    dependencies=[Depends(admin_authorization)],
+    dependencies=[Security(admin_authorization)],
 )
 def update_marquee_announcement(
     id: str, announcement: MarqueeAnnouncementPatch, db: Session = Depends(get_db)
