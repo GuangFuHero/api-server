@@ -3,7 +3,7 @@ import time
 from sqlalchemy import (
     Column, String, DateTime, Integer, Boolean, Text, BigInteger, ForeignKey
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .database import Base
@@ -274,3 +274,21 @@ class Report(Base):
     reason = Column(Text, nullable=False)
     notes = Column(Text)
     status = Column(Boolean, nullable=False)
+
+
+class RequestLog(Base):
+    __tablename__ = "request_logs"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    method = Column(String, nullable=False)
+    path = Column(String, nullable=False)
+    query = Column(String)
+    ip = Column(String)
+    headers = Column(JSONB)
+    status_code = Column(Integer)
+    error = Column(Text)
+    duration_ms = Column(Integer)
+    created_at = Column(DateTime, nullable=False, default=func.now())
+    request_body = Column(JSONB)
+    original_data = Column(JSONB)
+    result_data = Column(JSONB)
+    resource_id = Column(String)

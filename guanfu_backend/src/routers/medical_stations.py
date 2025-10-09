@@ -36,7 +36,16 @@ def create_medical_station(
     """
     建立醫療站
     """
-    return crud.create(db, models.MedicalStation, obj_in=station_in)
+    try:
+        return crud.create(db, models.MedicalStation, obj_in=station_in)
+    except Exception as e:
+        # 提供更清楚的錯誤訊息
+        if "services" in str(e) or "equipment" in str(e):
+            raise HTTPException(
+                status_code=400, 
+                detail="services 和 equipment 欄位必須是字串陣列格式，例如: [\"服務1\", \"服務2\"] 或 []"
+            )
+        raise HTTPException(status_code=400, detail=f"建立醫療站時發生錯誤: {str(e)}")
 
 
 @router.get("/{id}", response_model=schemas.MedicalStation, summary="取得特定醫療站")

@@ -139,10 +139,38 @@ class MedicalStationBase(BaseModel):
     affiliated_organization: Optional[str] = None
     notes: Optional[str] = None
     link: Optional[str] = None
+    
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+    
+    def __init__(self, **data):
+        # 處理 services 和 equipment 欄位的字串轉陣列
+        if 'services' in data and isinstance(data['services'], str):
+            try:
+                import json
+                if data['services'] in ['{}', '[]', '']:
+                    data['services'] = []
+                else:
+                    data['services'] = json.loads(data['services'])
+            except (json.JSONDecodeError, TypeError):
+                data['services'] = []
+        
+        if 'equipment' in data and isinstance(data['equipment'], str):
+            try:
+                import json
+                if data['equipment'] in ['{}', '[]', '']:
+                    data['equipment'] = []
+                else:
+                    data['equipment'] = json.loads(data['equipment'])
+            except (json.JSONDecodeError, TypeError):
+                data['equipment'] = []
+        
+        super().__init__(**data)
 
 # Todo:需要協助補上驗證規則 like phone and link
 class MedicalStationCreate(MedicalStationBase):
-    str: MedicalStationStatusEnum
+    status: MedicalStationStatusEnum
 
 
 class MedicalStationPatch(BaseModel):
@@ -688,3 +716,37 @@ class Report(ReportBase, BaseColumn):
 
 class ReportCollection(CollectionBase):
     member: List[Report]
+
+
+# ===================================================================
+# 請求日誌 (Request Logs)
+# ===================================================================
+
+class RequestLogBase(BaseModel):
+    method: str
+    path: str
+    query: Optional[str] = None
+    ip: Optional[str] = None
+    headers: Optional[Dict[str, Any]] = None
+    status_code: Optional[int] = None
+    error: Optional[str] = None
+    duration_ms: Optional[int] = None
+    request_body: Optional[Dict[str, Any]] = None
+    original_data: Optional[Dict[str, Any]] = None
+    result_data: Optional[Dict[str, Any]] = None
+    resource_id: Optional[str] = None
+
+
+class RequestLog(RequestLogBase, BaseColumn):
+    id: str
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+        json_encoders = {
+            datetime.datetime: lambda v: v.isoformat()
+        }
+
+
+class RequestLogCollection(CollectionBase):
+    member: List[RequestLog]

@@ -14,6 +14,17 @@ services:
     networks:
       - guanfu-network
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - guanfu-network
+
   backend:
     build:
       context: .
@@ -31,8 +42,12 @@ services:
       - "8080:8080"
     depends_on:
       - postgres
+      - redis
     networks:
       - guanfu-network
+
+volumes:
+  redis-data:
 
 networks:
   guanfu-network:

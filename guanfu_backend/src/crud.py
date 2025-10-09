@@ -242,3 +242,101 @@ def is_completed_supply(supply: models.Supply) -> bool:
         if item.total_number != item.received_count:
             is_compelete = False
     return is_compelete
+
+
+# =====================
+# for request_logs
+# =====================
+
+def create_request_log(db: Session, request_log_data: dict) -> models.RequestLog:
+    """Create a new request log entry."""
+    request_log = models.RequestLog(**request_log_data)
+    db.add(request_log)
+    db.commit()
+    db.refresh(request_log)
+    return request_log
+
+
+def get_request_logs(
+    db: Session, 
+    skip: int = 0, 
+    limit: int = 100, 
+    method: str = None,
+    status_code: int = None,
+    path: str = None,
+    ip: str = None,
+    start_date: str = None,
+    end_date: str = None
+) -> List[models.RequestLog]:
+    """Get request logs with optional filtering."""
+    query = db.query(models.RequestLog)
+    
+    if method:
+        query = query.filter(models.RequestLog.method == method)
+    if status_code:
+        query = query.filter(models.RequestLog.status_code == status_code)
+    if path:
+        query = query.filter(models.RequestLog.path.like(f"%{path}%"))
+    if ip:
+        query = query.filter(models.RequestLog.ip == ip)
+    if start_date:
+        query = query.filter(models.RequestLog.created_at >= start_date)
+    if end_date:
+        query = query.filter(models.RequestLog.created_at <= end_date)
+    
+    return query.order_by(models.RequestLog.created_at.desc()).offset(skip).limit(limit).all()
+
+
+def get_request_log_by_id(db: Session, log_id: str) -> Optional[models.RequestLog]:
+    """Get a specific request log by ID."""
+    return db.query(models.RequestLog).filter(models.RequestLog.id == log_id).first()
+
+
+def count_request_logs(
+    db: Session,
+    method: str = None,
+    status_code: int = None,
+    path: str = None,
+    ip: str = None,
+    start_date: str = None,
+    end_date: str = None
+) -> int:
+    """Count request logs with optional filtering."""
+    query = db.query(models.RequestLog)
+    
+    if method:
+        query = query.filter(models.RequestLog.method == method)
+    if status_code:
+        query = query.filter(models.RequestLog.status_code == status_code)
+    if path:
+        query = query.filter(models.RequestLog.path.like(f"%{path}%"))
+    if ip:
+        query = query.filter(models.RequestLog.ip == ip)
+    if start_date:
+        query = query.filter(models.RequestLog.created_at >= start_date)
+    if end_date:
+        query = query.filter(models.RequestLog.created_at <= end_date)
+    
+    return query.count()
+
+
+def delete_request_log(db: Session, log_id: str) -> bool:
+    """Delete a request log by ID."""
+    request_log = db.query(models.RequestLog).filter(models.RequestLog.id == log_id).first()
+    if request_log:
+        db.delete(request_log)
+        db.commit()
+        return True
+    return False
+
+
+def get_request_logs_by_resource_id(db: Session, resource_id: str, skip: int = 0, limit: int = 100) -> List[models.RequestLog]:
+    """Get request logs for a specific resource ID."""
+    return (
+        db.query(models.RequestLog)
+        .filter(models.RequestLog.resource_id == resource_id)
+        .order_by(models.RequestLog.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
