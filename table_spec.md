@@ -258,6 +258,7 @@
 | updated_at | number | 是 | 更新時間（Unix timestamp） | 1727750400 |
 | pii_date                   | number | 是  | 個資同意時間   (Unix Timestamp)   | 1759164503 |
 | valid_pin | string | 是 | 編輯時需確認的6碼pin | 123456 |
+| spam_warn | boolean | 否 | 是否被LLM標記為spam | true |
 
 
 ### supply_items 

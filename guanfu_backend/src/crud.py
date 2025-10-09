@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy import exists, and_
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.orm import Session
+from sqlalchemy.inspection import inspect as sa_inspect
 
 from . import models
 from .schemas import SupplyCreate, SupplyItemDistribution
@@ -27,6 +28,24 @@ def get_multi(db: Session, model: Type[ModelType], skip: int = 0, limit: int = 1
     if order_by is not None:
         query = query.order_by(order_by)
     return query.offset(skip).limit(limit).all()
+
+
+def orm_to_dict(obj: Any) -> dict:
+    """orm -> dict"""
+    mapper = sa_inspect(obj).mapper
+    data = {c.key: getattr(obj, c.key) for c in mapper.column_attrs}
+    return data
+
+
+def mask_id_if_field_equals(rows, field: str, value: bool|str):
+    """When the field is value, set the id to an empty string"""
+    out: List[dict] = []
+    for r in rows:
+        data = orm_to_dict(r)
+        if data.get(field) == value:
+            data["id"] = ""
+        out.append(data)
+    return out
 
 
 def count(db: Session, model: Type[ModelType], **filters) -> int:
@@ -95,7 +114,7 @@ def create_supply_with_items(db: Session, obj_in: SupplyCreate) -> models.Supply
         # 1) 建立 Supply 主體
         supply_data_raw = obj_in.model_dump(exclude={"supplies"}, exclude_unset=True)
         supply_data = normalize_payload_dict(supply_data_raw)  # Enum to value
-        db_supply = models.Supply(**supply_data, valid_pin=generate_pin())
+        db_supply = models.Supply(**supply_data, valid_pin=generate_pin(), spam_warn=False)
         db.add(db_supply)
         db.flush()  # 先拿到 db_supply.id 供 items 關聯
 
@@ -211,3 +230,11 @@ def get_full_supply(db: Session, query) -> models.Supply:
         )
     )
     return query.filter(not_fulfilled_exists)
+
+def is_completed_supply(supply: models.Supply) -> bool:
+    """Check whether the supply is completed"""
+    is_compelete = True
+    for item in supply.supplies:
+        if item.total_number != item.received_count:
+            is_compelete = False
+    return is_compelete
