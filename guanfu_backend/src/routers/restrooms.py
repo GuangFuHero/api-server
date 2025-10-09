@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session
 from typing import Optional
 from .. import crud, models, schemas
 from ..database import get_db
+from ..api_key import require_modify_api_key
 from ..enum_serializer import RestroomFacilityTypeEnum, RestroomStatusEnum
 
 router = APIRouter(
@@ -59,7 +60,12 @@ def get_restroom(id: str, db: Session = Depends(get_db)):
     return db_restroom
 
 
-@router.patch("/{id}", response_model=schemas.Restroom, summary="更新特定廁所點")
+@router.patch(
+    "/{id}",
+    response_model=schemas.Restroom,
+    summary="更新特定廁所點",
+    dependencies=[Security(require_modify_api_key)],
+)
 def patch_restroom(
         id: str, restroom_in: schemas.RestroomPatch, db: Session = Depends(get_db)
 ):

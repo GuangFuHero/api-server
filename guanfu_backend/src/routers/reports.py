@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session
 from typing import Optional
 from .. import crud, models, schemas
 from ..database import get_db
+from ..api_key import require_modify_api_key
 
 router = APIRouter(
     prefix="/reports",
@@ -48,7 +49,12 @@ def get_report(id: str, db: Session = Depends(get_db)):
     return db_report
 
 
-@router.patch("/{id}", response_model=schemas.Report, summary="更新特定回報事件")
+@router.patch(
+    "/{id}",
+    response_model=schemas.Report,
+    summary="更新特定回報事件",
+    dependencies=[Security(require_modify_api_key)],
+)
 def patch_report(
         id: str, report_in: schemas.ReportPatch, db: Session = Depends(get_db)
 ):
