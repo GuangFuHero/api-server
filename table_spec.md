@@ -274,6 +274,7 @@
 | unit | string | 否 | 物資的單位 | 箱 |
 
 
+
 ## Table & UI Mapping
 
 | 資料表 (Table) | 對應頁面 (UI Page) |
@@ -301,6 +302,18 @@
 | reason | string | 是 | 事件描述 | 校園操場積水深度約50公分 |
 | notes | string | 否 | 其他資訊 | 今天星期三 |
 | status | string | 是 | 是否解決 | true, false |
+| created_at | number | 是 | 建立時間（Unix timestamp） | 1727664000 |
+| updated_at | number | 是 | 更新時間（Unix timestamp） | 1727750400 |
+
+
+### marquee_announcements
+
+| 欄位名稱 | 資料類型 | 必填 | 說明 | 範例 |
+|---------|---------|------|------|------|
+| id | string | 是 | 跑馬燈唯一識別碼 | marquee-uuid-001 |
+| title | string | 否 | 跑馬燈標題 | 重要通知 |
+| content | string | 是 | 跑馬燈內容 | 請注意安全，避免前往危險區域 |
+| active | boolean | 是 | 是否啟用 | true, false |
 | created_at | number | 是 | 建立時間（Unix timestamp） | 1727664000 |
 | updated_at | number | 是 | 更新時間（Unix timestamp） | 1727750400 |
 
