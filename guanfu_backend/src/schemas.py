@@ -613,7 +613,7 @@ class SupplyBase(BaseModel):
 
 
 class SupplyCreate(SupplyBase):
-    supplies: List[SupplyItemBase]
+    supplies: Dict[str, Any]
 
 
 class SupplyPatch(BaseModel):
