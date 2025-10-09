@@ -30,6 +30,12 @@ class Settings(BaseSettings):
     LAN_SERVER_URL: str = "http://192.168.1.107"
     SERVER_PORT: str = "8080"
 
+    # LINE OAuth2/OIDC
+    LINE_CLIENT_ID: str
+    LINE_CLIENT_SECRET: str
+    LINE_REDIRECT_URI: str
+    LINE_SCOPES: str = "profile openid email"
+
 
 # 建立一個全域的 settings 實例供整個專案引用
 settings = Settings()
