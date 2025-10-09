@@ -1,10 +1,13 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session
-from typing import Optional
+
 from .. import crud, models, schemas
 from ..database import get_db
-from ..api_key import require_modify_api_key
+from ..middleware.api_key import require_modify_api_key
 from ..schemas import ShelterStatusEnum
+
 router = APIRouter(
     prefix="/shelters",
     tags=["庇護所（Shelters）"],
@@ -14,10 +17,10 @@ router = APIRouter(
 
 @router.get("", response_model=schemas.ShelterCollection, summary="取得庇護所清單")
 def list_shelters(
-        status: Optional[ShelterStatusEnum] = Query(None),
-        limit: int = Query(50, ge=1, le=500),
-        offset: int = Query(0, ge=0),
-        db: Session = Depends(get_db)
+    status: Optional[ShelterStatusEnum] = Query(None),
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
 ):
     """
     取得庇護所清單 (分頁)
@@ -29,9 +32,7 @@ def list_shelters(
 
 
 @router.post("", response_model=schemas.Shelter, status_code=201, summary="建立庇護所")
-def create_shelter(
-        shelter_in: schemas.ShelterCreate, db: Session = Depends(get_db)
-):
+def create_shelter(shelter_in: schemas.ShelterCreate, db: Session = Depends(get_db)):
     """
     建立庇護所
     """
@@ -56,7 +57,7 @@ def get_shelter(id: str, db: Session = Depends(get_db)):
     dependencies=[Security(require_modify_api_key)],
 )
 def patch_shelter(
-        id: str, shelter_in: schemas.ShelterPatch, db: Session = Depends(get_db)
+    id: str, shelter_in: schemas.ShelterPatch, db: Session = Depends(get_db)
 ):
     """
     更新庇護所 (部分欄位)

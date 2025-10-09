@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from .. import crud, models, schemas
 from ..database import get_db
-from ..api_key import require_modify_api_key
+from ..middleware.api_key import require_modify_api_key
 
 router = APIRouter(
     prefix="/water_refill_stations",
@@ -14,15 +14,19 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=schemas.WaterRefillStationCollection, summary="取得飲用水補給站清單")
+@router.get(
+    "",
+    response_model=schemas.WaterRefillStationCollection,
+    summary="取得飲用水補給站清單",
+)
 def list_water_refill_stations(
-        status: Optional[str] = Query(None),
-        water_type: Optional[str] = Query(None),
-        is_free: Optional[bool] = Query(None),
-        accessibility: Optional[bool] = Query(None),
-        limit: int = Query(50, ge=1, le=500),
-        offset: int = Query(0, ge=0),
-        db: Session = Depends(get_db)
+    status: Optional[str] = Query(None),
+    water_type: Optional[str] = Query(None),
+    is_free: Optional[bool] = Query(None),
+    accessibility: Optional[bool] = Query(None),
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
 ):
     """
     取得飲用水補給站清單 (分頁)
@@ -33,14 +37,21 @@ def list_water_refill_stations(
         "is_free": is_free,
         "accessibility": accessibility,
     }
-    stations = crud.get_multi(db, models.WaterRefillStation, skip=offset, limit=limit, **filters)
+    stations = crud.get_multi(
+        db, models.WaterRefillStation, skip=offset, limit=limit, **filters
+    )
     total = crud.count(db, models.WaterRefillStation, **filters)
     return {"member": stations, "totalItems": total, "limit": limit, "offset": offset}
 
 
-@router.post("", response_model=schemas.WaterRefillStation, status_code=201, summary="建立飲用水補給站")
+@router.post(
+    "",
+    response_model=schemas.WaterRefillStation,
+    status_code=201,
+    summary="建立飲用水補給站",
+)
 def create_water_refill_station(
-        station_in: schemas.WaterRefillStationCreate, db: Session = Depends(get_db)
+    station_in: schemas.WaterRefillStationCreate, db: Session = Depends(get_db)
 ):
     """
     建立飲用水補給站
@@ -48,7 +59,9 @@ def create_water_refill_station(
     return crud.create(db, models.WaterRefillStation, obj_in=station_in)
 
 
-@router.get("/{id}", response_model=schemas.WaterRefillStation, summary="取得特定飲用水補給站")
+@router.get(
+    "/{id}", response_model=schemas.WaterRefillStation, summary="取得特定飲用水補給站"
+)
 def get_water_refill_station(id: str, db: Session = Depends(get_db)):
     """
     取得單一飲用水補給站
@@ -66,7 +79,7 @@ def get_water_refill_station(id: str, db: Session = Depends(get_db)):
     dependencies=[Security(require_modify_api_key)],
 )
 def patch_water_refill_station(
-        id: str, station_in: schemas.WaterRefillStationPatch, db: Session = Depends(get_db)
+    id: str, station_in: schemas.WaterRefillStationPatch, db: Session = Depends(get_db)
 ):
     """
     更新飲用水補給站 (部分欄位)

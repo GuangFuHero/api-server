@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 
 from .. import crud, models, schemas
 from ..database import get_db
-from ..api_key import require_modify_api_key
 from ..enum_serializer import ShowerFacilityTypeEnum, ShowerStationStatusEnum
+from ..middleware.api_key import require_modify_api_key
 
 router = APIRouter(
     prefix="/shower_stations",
@@ -15,15 +15,17 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=schemas.ShowerStationCollection, summary="取得洗澡點清單")
+@router.get(
+    "", response_model=schemas.ShowerStationCollection, summary="取得洗澡點清單"
+)
 def list_shower_stations(
-        status: Optional[ShowerStationStatusEnum] = Query(None),
-        facility_type: Optional[ShowerFacilityTypeEnum] = Query(None),
-        is_free: Optional[bool] = Query(None),
-        requires_appointment: Optional[bool] = Query(None),
-        limit: int = Query(50, ge=1, le=500),
-        offset: int = Query(0, ge=0),
-        db: Session = Depends(get_db)
+    status: Optional[ShowerStationStatusEnum] = Query(None),
+    facility_type: Optional[ShowerFacilityTypeEnum] = Query(None),
+    is_free: Optional[bool] = Query(None),
+    requires_appointment: Optional[bool] = Query(None),
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
 ):
     """
     取得洗澡點清單 (分頁)
@@ -34,14 +36,18 @@ def list_shower_stations(
         "is_free": is_free,
         "requires_appointment": requires_appointment,
     }
-    stations = crud.get_multi(db, models.ShowerStation, skip=offset, limit=limit, **filters)
+    stations = crud.get_multi(
+        db, models.ShowerStation, skip=offset, limit=limit, **filters
+    )
     total = crud.count(db, models.ShowerStation, **filters)
     return {"member": stations, "totalItems": total, "limit": limit, "offset": offset}
 
 
-@router.post("", response_model=schemas.ShowerStation, status_code=201, summary="建立洗澡點")
+@router.post(
+    "", response_model=schemas.ShowerStation, status_code=201, summary="建立洗澡點"
+)
 def create_shower_station(
-        station_in: schemas.ShowerStationCreate, db: Session = Depends(get_db)
+    station_in: schemas.ShowerStationCreate, db: Session = Depends(get_db)
 ):
     """
     建立洗澡點
@@ -67,7 +73,7 @@ def get_shower_station(id: str, db: Session = Depends(get_db)):
     dependencies=[Security(require_modify_api_key)],
 )
 def patch_shower_station(
-        id: str, station_in: schemas.ShowerStationPatch, db: Session = Depends(get_db)
+    id: str, station_in: schemas.ShowerStationPatch, db: Session = Depends(get_db)
 ):
     """
     更新洗澡點 (部分欄位)

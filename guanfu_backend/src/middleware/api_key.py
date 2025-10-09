@@ -3,7 +3,7 @@ from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBea
 from starlette import status
 from starlette.requests import Request
 
-from .config import settings
+from ..config import settings
 
 API_KEY_HEADER = "x-api-key"
 AUTHORIZATION_HEADER = "authorization"
@@ -54,6 +54,34 @@ async def require_modify_api_key(
         )
 
     if key not in allowed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid API key",
+        )
+
+    return key
+
+
+async def admin_authorization(
+    request: Request,
+    _api_key_from_header: str | None = Security(api_key_header_scheme),
+    _bearer_credentials: HTTPAuthorizationCredentials | None = Security(bearer_scheme),
+):
+    allowed = settings.ADMIN_API_KEY
+    if not allowed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Modification not allowed",
+        )
+
+    key = extract_api_key(request)
+    if not key:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Modification not allowed",
+        )
+
+    if key != allowed:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Invalid API key",

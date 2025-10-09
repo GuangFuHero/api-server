@@ -1,10 +1,12 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session
-from typing import Optional
+
 from .. import crud, models, schemas
 from ..database import get_db
-from ..api_key import require_modify_api_key
 from ..enum_serializer import RestroomFacilityTypeEnum, RestroomStatusEnum
+from ..middleware.api_key import require_modify_api_key
 
 router = APIRouter(
     prefix="/restrooms",
@@ -15,14 +17,14 @@ router = APIRouter(
 
 @router.get("", response_model=schemas.RestroomCollection, summary="取得廁所點清單")
 def list_restrooms(
-        status: Optional[RestroomStatusEnum] = Query(None),
-        facility_type: Optional[RestroomFacilityTypeEnum] = Query(None),
-        is_free: Optional[bool] = Query(None),
-        has_water: Optional[bool] = Query(None),
-        has_lighting: Optional[bool] = Query(None),
-        limit: int = Query(50, ge=1, le=500),
-        offset: int = Query(0, ge=0),
-        db: Session = Depends(get_db)
+    status: Optional[RestroomStatusEnum] = Query(None),
+    facility_type: Optional[RestroomFacilityTypeEnum] = Query(None),
+    is_free: Optional[bool] = Query(None),
+    has_water: Optional[bool] = Query(None),
+    has_lighting: Optional[bool] = Query(None),
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
 ):
     """
     取得廁所點清單 (分頁)
@@ -40,9 +42,7 @@ def list_restrooms(
 
 
 @router.post("", response_model=schemas.Restroom, status_code=201, summary="建立廁所點")
-def create_restroom(
-        restroom_in: schemas.RestroomCreate, db: Session = Depends(get_db)
-):
+def create_restroom(restroom_in: schemas.RestroomCreate, db: Session = Depends(get_db)):
     """
     建立廁所點
     """
@@ -67,7 +67,7 @@ def get_restroom(id: str, db: Session = Depends(get_db)):
     dependencies=[Security(require_modify_api_key)],
 )
 def patch_restroom(
-        id: str, restroom_in: schemas.RestroomPatch, db: Session = Depends(get_db)
+    id: str, restroom_in: schemas.RestroomPatch, db: Session = Depends(get_db)
 ):
     """
     更新廁所點 (部分欄位)

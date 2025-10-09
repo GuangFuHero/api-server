@@ -1,10 +1,12 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session
-from typing import Optional
+
 from .. import crud, models, schemas
 from ..database import get_db
-from ..api_key import require_modify_api_key
-from ..enum_serializer import AccommodationVacancyEnum, AccommodationStatusEnum
+from ..enum_serializer import AccommodationStatusEnum, AccommodationVacancyEnum
+from ..middleware.api_key import require_modify_api_key
 
 router = APIRouter(
     prefix="/accommodations",
@@ -13,14 +15,16 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=schemas.AccommodationCollection, summary="取得庇護所清單")
+@router.get(
+    "", response_model=schemas.AccommodationCollection, summary="取得庇護所清單"
+)
 def list_accommodations(
-        status: Optional[AccommodationStatusEnum] = Query(None),
-        township: Optional[str] = Query(None),
-        has_vacancy: Optional[AccommodationVacancyEnum] = Query(None),
-        limit: int = Query(50, ge=1, le=500),
-        offset: int = Query(0, ge=0),
-        db: Session = Depends(get_db)
+    status: Optional[AccommodationStatusEnum] = Query(None),
+    township: Optional[str] = Query(None),
+    has_vacancy: Optional[AccommodationVacancyEnum] = Query(None),
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
 ):
     """
     取得住宿資源清單 (分頁)
@@ -30,14 +34,23 @@ def list_accommodations(
         "township": township,
         "has_vacancy": has_vacancy,
     }
-    accommodations = crud.get_multi(db, models.Accommodation, skip=offset, limit=limit, **filters)
+    accommodations = crud.get_multi(
+        db, models.Accommodation, skip=offset, limit=limit, **filters
+    )
     total = crud.count(db, models.Accommodation, **filters)
-    return {"member": accommodations, "totalItems": total, "limit": limit, "offset": offset}
+    return {
+        "member": accommodations,
+        "totalItems": total,
+        "limit": limit,
+        "offset": offset,
+    }
 
 
-@router.post("", response_model=schemas.Accommodation, status_code=201, summary="建立庇護所")
+@router.post(
+    "", response_model=schemas.Accommodation, status_code=201, summary="建立庇護所"
+)
 def create_accommodation(
-        accommodation_in: schemas.AccommodationCreate, db: Session = Depends(get_db)
+    accommodation_in: schemas.AccommodationCreate, db: Session = Depends(get_db)
 ):
     """
     建立住宿資源
@@ -63,7 +76,7 @@ def get_accommodation(id: str, db: Session = Depends(get_db)):
     dependencies=[Security(require_modify_api_key)],
 )
 def patch_accommodation(
-        id: str, accommodation_in: schemas.AccommodationPatch, db: Session = Depends(get_db)
+    id: str, accommodation_in: schemas.AccommodationPatch, db: Session = Depends(get_db)
 ):
     """
     更新住宿資源 (部分欄位)

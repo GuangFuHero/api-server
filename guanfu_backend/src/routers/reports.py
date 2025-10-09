@@ -1,9 +1,11 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session
-from typing import Optional
+
 from .. import crud, models, schemas
 from ..database import get_db
-from ..api_key import require_modify_api_key
+from ..middleware.api_key import require_modify_api_key
 
 router = APIRouter(
     prefix="/reports",
@@ -14,10 +16,10 @@ router = APIRouter(
 
 @router.get("", response_model=schemas.ReportCollection, summary="取得回報事件清單")
 def list_reports(
-        status: Optional[bool] = Query(None),
-        limit: int = Query(50, ge=1, le=500),
-        offset: int = Query(0, ge=0),
-        db: Session = Depends(get_db)
+    status: Optional[bool] = Query(None),
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
 ):
     """
     取得回報事件清單 (分頁)
@@ -29,9 +31,7 @@ def list_reports(
 
 
 @router.post("", response_model=schemas.Report, status_code=201, summary="建立回報事件")
-def create_report(
-        report_in: schemas.ReportCreate, db: Session = Depends(get_db)
-):
+def create_report(report_in: schemas.ReportCreate, db: Session = Depends(get_db)):
     """
     建立回報事件
     """
@@ -56,7 +56,7 @@ def get_report(id: str, db: Session = Depends(get_db)):
     dependencies=[Security(require_modify_api_key)],
 )
 def patch_report(
-        id: str, report_in: schemas.ReportPatch, db: Session = Depends(get_db)
+    id: str, report_in: schemas.ReportPatch, db: Session = Depends(get_db)
 ):
     """
     更新回報事件 (部分欄位)

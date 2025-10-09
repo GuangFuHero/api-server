@@ -1,10 +1,12 @@
+from typing import List, Literal, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session, joinedload
-from typing import Optional, List, Literal
+
 from .. import crud, models, schemas
 from ..crud import get_full_supply
 from ..database import get_db
-from ..api_key import require_modify_api_key
+from ..middleware.api_key import require_modify_api_key
 
 router = APIRouter(
     prefix="/supplies",
@@ -15,15 +17,17 @@ router = APIRouter(
 
 @router.get("", response_model=schemas.SupplyCollection, summary="取得供應單清單")
 def list_supplies(
-        embed: Optional[str] = Query(None, enum=["all"]),
-        limit: int = Query(50, ge=1, le=500),
-        offset: int = Query(0, ge=0),
-        order_by: Optional[Literal["asc", "desc"]] = Query(None, description="時間排序方式：asc 或 desc"),
-        db: Session = Depends(get_db)
+    embed: Optional[str] = Query(None, enum=["all"]),
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    order_by: Optional[Literal["asc", "desc"]] = Query(
+        None, description="時間排序方式：asc 或 desc"
+    ),
+    db: Session = Depends(get_db),
 ):
     """
     取得供應單清單 (分頁)
-    
+
     - order_by: 指定時間排序方式，可選 "asc" (由舊到新) 或 "desc" (由新到舊)
     """
     order_clause = None
@@ -31,30 +35,29 @@ def list_supplies(
         order_clause = models.Supply.created_at.asc()
     elif order_by == "desc":
         order_clause = models.Supply.created_at.desc()
-    
+
     supplies = crud.get_multi(
-        db, 
-        model=models.Supply, 
-        skip=offset, 
-        limit=limit, 
-        order_by=order_clause
+        db, model=models.Supply, skip=offset, limit=limit, order_by=order_clause
     )
-    
+
     if embed == "all":
-        supplies = db.query(models.Supply).options(
-            joinedload(models.Supply.supplies)
-        ).filter(models.Supply.id.in_([s.id for s in supplies])).all()
-    
+        supplies = (
+            db.query(models.Supply)
+            .options(joinedload(models.Supply.supplies))
+            .filter(models.Supply.id.in_([s.id for s in supplies]))
+            .all()
+        )
+
     # 使用 crud.count 取得總數
     total = crud.count(db, model=models.Supply)
 
     return {"member": supplies, "totalItems": total, "limit": limit, "offset": offset}
 
 
-@router.post("", response_model=schemas.SupplyWithPin, status_code=201, summary="建立供應單")
-def create_supply(
-        supply_in: schemas.SupplyCreate, db: Session = Depends(get_db)
-):
+@router.post(
+    "", response_model=schemas.SupplyWithPin, status_code=201, summary="建立供應單"
+)
+def create_supply(supply_in: schemas.SupplyCreate, db: Session = Depends(get_db)):
     """
     建立供應單 (注意：同時建立 supply_items 的邏輯需在 crud 中客製化)
     """
@@ -71,14 +74,16 @@ def create_supply(
     dependencies=[Security(require_modify_api_key)],
 )
 def patch_supply(
-        id: str, supply_in: schemas.SupplyPatch, db: Session = Depends(get_db)
+    id: str, supply_in: schemas.SupplyPatch, db: Session = Depends(get_db)
 ):
     db_supply = crud.get_by_id(db, models.Supply, id)
     if db_supply is None:
         raise HTTPException(status_code=404, detail="Supply not found")
 
     if crud.is_completed_supply(db_supply):
-        raise HTTPException(status_code=400, detail="Completed supply orders cannot be edited.")
+        raise HTTPException(
+            status_code=400, detail="Completed supply orders cannot be edited."
+        )
 
     # PIN 檢核
     if db_supply.valid_pin and db_supply.valid_pin != supply_in.valid_pin:
@@ -92,7 +97,12 @@ def get_supply(id: str, db: Session = Depends(get_db)):
     """
     取得單一供應單 (包含其所有物資項目)
     """
-    db_supply = db.query(models.Supply).options(joinedload(models.Supply.supplies)).filter(models.Supply.id == id).first()
+    db_supply = (
+        db.query(models.Supply)
+        .options(joinedload(models.Supply.supplies))
+        .filter(models.Supply.id == id)
+        .first()
+    )
     if db_supply is None:
         raise HTTPException(status_code=404, detail="Supply not found")
     return db_supply

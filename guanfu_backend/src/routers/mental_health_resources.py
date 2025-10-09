@@ -1,10 +1,16 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session
-from typing import Optional
+
 from .. import crud, models, schemas
 from ..database import get_db
-from ..api_key import require_modify_api_key
-from ..enum_serializer import MentalHealthDurationEnum, MentalHealthFormatEnum, MentalHealthResourceStatusEnum
+from ..enum_serializer import (
+    MentalHealthDurationEnum,
+    MentalHealthFormatEnum,
+    MentalHealthResourceStatusEnum,
+)
+from ..middleware.api_key import require_modify_api_key
 
 router = APIRouter(
     prefix="/mental_health_resources",
@@ -13,14 +19,18 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=schemas.MentalHealthResourceCollection, summary="取得心理健康資源清單")
+@router.get(
+    "",
+    response_model=schemas.MentalHealthResourceCollection,
+    summary="取得心理健康資源清單",
+)
 def list_mental_health_resources(
-        status: Optional[MentalHealthResourceStatusEnum] = Query(None),
-        duration_type: Optional[MentalHealthDurationEnum] = Query(None),
-        service_format: Optional[MentalHealthFormatEnum] = Query(None),
-        limit: int = Query(50, ge=1, le=500),
-        offset: int = Query(0, ge=0),
-        db: Session = Depends(get_db)
+    status: Optional[MentalHealthResourceStatusEnum] = Query(None),
+    duration_type: Optional[MentalHealthDurationEnum] = Query(None),
+    service_format: Optional[MentalHealthFormatEnum] = Query(None),
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
 ):
     """
     取得心理健康資源清單 (分頁)
@@ -30,14 +40,21 @@ def list_mental_health_resources(
         "duration_type": duration_type,
         "service_format": service_format,
     }
-    resources = crud.get_multi(db, models.MentalHealthResource, skip=offset, limit=limit, **filters)
+    resources = crud.get_multi(
+        db, models.MentalHealthResource, skip=offset, limit=limit, **filters
+    )
     total = crud.count(db, models.MentalHealthResource, **filters)
     return {"member": resources, "totalItems": total, "limit": limit, "offset": offset}
 
 
-@router.post("", response_model=schemas.MentalHealthResource, status_code=201, summary="建立心理健康資源")
+@router.post(
+    "",
+    response_model=schemas.MentalHealthResource,
+    status_code=201,
+    summary="建立心理健康資源",
+)
 def create_mental_health_resource(
-        resource_in: schemas.MentalHealthResourceCreate, db: Session = Depends(get_db)
+    resource_in: schemas.MentalHealthResourceCreate, db: Session = Depends(get_db)
 ):
     """
     建立心理健康資源
@@ -45,7 +62,9 @@ def create_mental_health_resource(
     return crud.create(db, models.MentalHealthResource, obj_in=resource_in)
 
 
-@router.get("/{id}", response_model=schemas.MentalHealthResource, summary="取得特定心理健康資源")
+@router.get(
+    "/{id}", response_model=schemas.MentalHealthResource, summary="取得特定心理健康資源"
+)
 def get_mental_health_resource(id: str, db: Session = Depends(get_db)):
     """
     取得單一心理健康資源
@@ -63,7 +82,9 @@ def get_mental_health_resource(id: str, db: Session = Depends(get_db)):
     dependencies=[Security(require_modify_api_key)],
 )
 def patch_mental_health_resource(
-        id: str, resource_in: schemas.MentalHealthResourcePatch, db: Session = Depends(get_db)
+    id: str,
+    resource_in: schemas.MentalHealthResourcePatch,
+    db: Session = Depends(get_db),
 ):
     """
     更新心理健康資源 (部分欄位)
