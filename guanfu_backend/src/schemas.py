@@ -201,6 +201,8 @@ class MentalHealthResourceCreate(MentalHealthResourceBase):
     duration_type: MentalHealthDurationEnum
     service_format: MentalHealthFormatEnum
     status: MentalHealthResourceStatusEnum
+    is_free: Optional[bool] = False
+    emergency_support: Optional[bool] = False
 
 
 class MentalHealthResourcePatch(BaseModel):
@@ -259,6 +261,8 @@ class AccommodationBase(BaseModel):
 class AccommodationCreate(AccommodationBase):
     status: AccommodationStatusEnum
     has_vacancy: AccommodationVacancyEnum
+    available_period: Optional[str] = None
+    pricing:Optional[str] = None
 
 
 class AccommodationPatch(BaseModel):
@@ -510,6 +514,8 @@ class HumanResourceCreate(HumanResourceBase):
     role_type: HumanResourceRoleTypeEnum
     role_status: HumanResourceRoleStatusEnum
     experience_level: Optional[HumanResourceExperienceLevelEnum] = None
+    is_completed: Optional[bool] = False
+    headcount_got: Optional[int] = 0
 
 
 class HumanResourcePatch(BaseModel):
@@ -613,7 +619,7 @@ class SupplyBase(BaseModel):
 
 
 class SupplyCreate(SupplyBase):
-    supplies: List[SupplyItemBase]
+    supplies: Dict[str, Any]
 
 
 class SupplyPatch(BaseModel):

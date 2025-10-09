@@ -133,15 +133,12 @@ class RestroomStatusEnum(enum.Enum):
 
 
 class HumanResourceRoleTypeEnum(enum.Enum):
-    general_volunteer = "general_volunteer"
-    medical_staff = "medical_staff"
-    logistics = "logistics"
-    cleaning = "cleaning"
-    admin_support = "admin_support"
-    driver = "driver"
-    security = "security"
-    professional = "professional"
-    other = "other"
+    general_volunteer = "一般志工"
+    medical_staff = "醫療照護"
+    logistics = "後勤支援"
+    cleaning = "清潔/整理"
+    professional = "專業技術"
+    other = "其他"
 
 
 class HumanResourceRoleStatusEnum(enum.Enum):
