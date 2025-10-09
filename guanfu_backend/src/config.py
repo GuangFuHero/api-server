@@ -31,5 +31,8 @@ class Settings(BaseSettings):
     SERVER_PORT: str = "8080"
     ALLOW_MODIFY_API_KEY_LIST: str = ""
 
+    ADMIN_API_KEY: str = "WhosYourDaddy?AhuHaha!"
+
+
 # 建立一個全域的 settings 實例供整個專案引用
 settings = Settings()

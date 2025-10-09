@@ -688,3 +688,40 @@ class Report(ReportBase, BaseColumn):
 
 class ReportCollection(CollectionBase):
     member: List[Report]
+
+
+# ===================================================================
+# 跑馬燈 (Marquee Announcements)
+# ===================================================================
+
+
+class MarqueeAnnouncementBase(BaseModel):
+    title: Optional[str] = None
+    content: str
+    active: bool
+
+
+class MarqueeAnnouncementCreate(MarqueeAnnouncementBase):
+    pass
+
+
+class MarqueeAnnouncementPatch(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+    active: Optional[bool] = None
+
+
+class MarqueeAnnouncement(MarqueeAnnouncementBase, BaseColumn):
+    id: str
+    created_at: Optional[datetime.datetime] = None
+    updated_at: Optional[datetime.datetime] = None
+    title: Optional[str] = None
+    content: Optional[str] = None
+    active: Optional[bool] = None
+
+    class Config:
+        from_attributes = True
+
+
+class MarqueeAnnouncementCollection(CollectionBase):
+    member: List[MarqueeAnnouncement]

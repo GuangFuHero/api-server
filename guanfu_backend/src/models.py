@@ -274,3 +274,18 @@ class Report(Base):
     reason = Column(Text, nullable=False)
     notes = Column(Text)
     status = Column(Boolean, nullable=False)
+
+
+class MarqueeAnnouncements(Base):
+    __tablename__ = "marquee_announcements"
+    id = Column(String, primary_key=True, default=generate_uuid_str)
+    created_at = Column(BigInteger, nullable=False, default=current_timestamp_int)
+    updated_at = Column(
+        BigInteger,
+        nullable=False,
+        default=current_timestamp_int,
+        onupdate=current_timestamp_int,
+    )
+    title = Column(String)
+    content = Column(Text, nullable=False)
+    active = Column(Boolean, nullable=False)
