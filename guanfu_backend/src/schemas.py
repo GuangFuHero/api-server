@@ -201,6 +201,8 @@ class MentalHealthResourceCreate(MentalHealthResourceBase):
     duration_type: MentalHealthDurationEnum
     service_format: MentalHealthFormatEnum
     status: MentalHealthResourceStatusEnum
+    is_free: Optional[bool] = False
+    emergency_support: Optional[bool] = False
 
 
 class MentalHealthResourcePatch(BaseModel):
