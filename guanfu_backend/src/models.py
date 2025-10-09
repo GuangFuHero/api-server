@@ -274,3 +274,17 @@ class Report(Base):
     reason = Column(Text, nullable=False)
     notes = Column(Text)
     status = Column(Boolean, nullable=False)
+
+
+class SupplyProvider(Base):
+    __tablename__ = "supply_providers"
+    id = Column(String, primary_key=True, default=generate_uuid_str)
+    name = Column(String, nullable=False)
+    phone = Column(String, nullable=False)
+    supply_item_id = Column(String, nullable=False)
+    address = Column(String, nullable=False)
+    notes = Column(Text)
+    provide_count = Column(Integer)
+    provide_unit = Column(String)
+    created_at = Column(BigInteger, nullable=False, default=current_timestamp_int)
+    updated_at = Column(BigInteger, nullable=False, default=current_timestamp_int, onupdate=current_timestamp_int)

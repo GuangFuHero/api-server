@@ -22,6 +22,7 @@ from .routers import (
     shower_stations,
     supplies,
     supply_items,
+    supply_providers,
     volunteer_organizations,
     water_refill_stations,
 )
@@ -147,3 +148,4 @@ app.include_router(shower_stations.router)
 app.include_router(water_refill_stations.router)
 app.include_router(supplies.router)
 app.include_router(supply_items.router)
+app.include_router(supply_providers.router)

@@ -656,6 +656,46 @@ class SupplyItemDistribution(BaseModel):
 
 
 # ===================================================================
+# 物資供應提供者 (Supply Providers)
+# ===================================================================
+
+class SupplyProviderBase(BaseModel):
+    name: str
+    phone: str
+    supply_item_id: str
+    address: str
+    notes: Optional[str] = None
+    provide_count: NonNegativeInt
+    provide_unit: Optional[str] = None
+
+
+class SupplyProviderCreate(SupplyProviderBase):
+    pass
+
+
+class SupplyProviderPatch(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    supply_item_id: Optional[str] = None
+    address: Optional[str] = None
+    notes: Optional[str] = None
+    provide_count: Optional[NonNegativeInt] = None
+    provide_unit: Optional[str] = None
+
+
+class SupplyProvider(SupplyProviderBase, BaseColumn):
+    created_at: Optional[int] = None
+    updated_at: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+
+class SupplyProviderCollection(CollectionBase):
+    member: List[SupplyProvider]
+
+
+# ===================================================================
 # 回報事件 (Reports)
 # ===================================================================
 
