@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, Literal
 from .. import crud, models, schemas
 from ..database import get_db
 from ..enum_serializer import HumanResourceRoleStatusEnum, HumanResourceRoleTypeEnum, HumanResourceStatusEnum
@@ -20,17 +20,34 @@ def list_human_resources(
         role_type: Optional[HumanResourceRoleTypeEnum] = Query(None),
         limit: int = Query(20, ge=1, le=200),
         offset: int = Query(0, ge=0),
+        order_by_time: Optional[Literal["asc", "desc"]] = Query(None, description="時間排序方式：asc 或 desc"),
         db: Session = Depends(get_db)
 ):
     """
     取得人力需求清單 (分頁)
+    
+    - order_by: 指定時間排序方式，可選 "asc" (由舊到新) 或 "desc" (由新到舊)
     """
     filters = {
         "status": status,
         "role_status": role_status,
         "role_type": role_type,
     }
-    resources = crud.get_multi(db=db, model=models.HumanResource, skip=offset, limit=limit, **filters)
+    
+    order_by = None
+    if order_by_time == "asc":
+        order_by = models.HumanResource.created_at.asc()
+    elif order_by_time == "desc":
+        order_by = models.HumanResource.created_at.desc()
+    
+    resources = crud.get_multi(
+        db, 
+        models.HumanResource, 
+        skip=offset, 
+        limit=limit,
+        order_by=order_by,
+        **filters
+    )
     resources = crud.mask_id_if_field_equals(resources, "status", "completed")
     total = crud.count(db, models.HumanResource, **filters)
     return {"member": resources, "totalItems": total, "limit": limit, "offset": offset}

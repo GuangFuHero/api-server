@@ -22,6 +22,14 @@ cd guanfu_backend
 
 # 3. 複製環境變數檔案（使用預設值）
 cp .env.example .env.dev
+# 編輯 .env.dev 填入資料庫設定
+
+# 啟動資料庫與開發伺服器
+docker-compose --env-file .env.dev up -d postgres
+uvicorn src.main:app --reload
+```
+
+訪問 http://localhost:8080/docs 查看 API 文件。
 
 # 4. 啟動所有服務
 docker compose --env-file .env.dev up -d --build
@@ -121,7 +129,16 @@ docker compose down
 docker compose down -v
 ```
 
-## 進階：本地開發模式
+伺服器啟動後，開啟瀏覽器訪問：
+
+- API 文件：http://localhost:8080/docs
+- 替代文件：http://localhost:8080/redoc
+
+**優點：**
+- 程式碼變更立即生效（hot reload）
+- 可以使用 Python debugger
+- 開發迭代速度快
+- 只有資料庫在 Docker 中執行
 
 如果需要使用 Python debugger 或 hot reload 功能，可以只用 Docker 執行資料庫，應用程式在本地執行。
 
