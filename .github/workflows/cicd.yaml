@@ -46,5 +46,5 @@ jobs:
           port: 22
           script: |
             cd /home/deploy/api-server/guanfu_backend
-            docker-compose ps
+            docker compose ps
             curl -f http://localhost:8000/docs || echo "Warning: Backend health check failed"

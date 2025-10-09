@@ -90,11 +90,11 @@ API_KEY=your_production_api_key
 cd /home/deploy/api-server/guanfu_backend
 
 # 啟動所有服務（包含 DB 初始化）
-docker-compose up -d
+docker compose up -d
 
 # 檢查服務狀態
-docker-compose ps
-docker-compose logs -f backend
+docker compose ps
+docker compose logs -f backend
 
 # 檢查 backend 是否正常運行
 curl http://localhost:8000/docs
@@ -125,10 +125,12 @@ git push origin v1.0.0
 ### 部署流程
 
 1. **觸發條件**
+
    - 推送到 main branch，或
    - 推送 tag（格式：`v*.*.*`）
 
 2. **GitHub Actions 自動執行**
+
    - 觸發 `.github/workflows/cicd.yaml`
    - SSH 連接到 GCP VM
    - 執行 `deploy.sh` 腳本
@@ -169,30 +171,30 @@ cd /home/deploy/api-server
 
 ```bash
 cd /home/deploy/api-server/guanfu_backend
-docker-compose ps
+docker compose ps
 ```
 
 ### 查看日誌
 
 ```bash
 # Backend 日誌
-docker-compose logs -f backend
+docker compose logs -f backend
 
 # 所有服務日誌
-docker-compose logs -f
+docker compose logs -f
 
 # 最近 100 行日誌
-docker-compose logs --tail=100 backend
+docker compose logs --tail=100 backend
 ```
 
 ### 重啟服務
 
 ```bash
 # 只重啟 backend
-docker-compose restart backend
+docker compose restart backend
 
 # 重啟所有服務
-docker-compose restart
+docker compose restart
 ```
 
 ## 回滾部署
@@ -212,7 +214,7 @@ cd /home/deploy/api-server
 cd /home/deploy/api-server/guanfu_backend
 
 # 首次申請憑證（如果 certbot/ 目錄已存在則跳過）
-docker-compose -f docker-compose-certbot.yaml run --rm certbot certonly \
+docker compose -f docker-compose-certbot.yaml run --rm certbot certonly \
   --webroot \
   --webroot-path=/var/www/certbot \
   -d yourdomain.com \
@@ -222,7 +224,7 @@ docker-compose -f docker-compose-certbot.yaml run --rm certbot certonly \
   --no-eff-email
 
 # 重啟 nginx 套用憑證
-docker-compose restart nginx
+docker compose restart nginx
 ```
 
 ## 故障排除
@@ -231,27 +233,27 @@ docker-compose restart nginx
 
 ```bash
 # 檢查日誌
-docker-compose logs backend
+docker compose logs backend
 
 # 檢查環境變數
-docker-compose config
+docker compose config
 
 # 重新構建
-docker-compose build --no-cache backend
-docker-compose up -d backend
+docker compose build --no-cache backend
+docker compose up -d backend
 ```
 
 ### 資料庫連接失敗
 
 ```bash
 # 檢查 postgres 是否運行
-docker-compose ps postgres
+docker compose ps postgres
 
 # 檢查 postgres 日誌
-docker-compose logs postgres
+docker compose logs postgres
 
 # 測試資料庫連接
-docker-compose exec postgres psql -U your_db_user -d guangfu_prod
+docker compose exec postgres psql -U your_db_user -d guangfu_prod
 ```
 
 ### 磁碟空間不足
@@ -276,10 +278,10 @@ docker system df
 
    ```bash
    # 備份
-   docker-compose exec postgres pg_dump -U your_db_user guangfu_prod > backup_$(date +%Y%m%d).sql
+   docker compose exec postgres pg_dump -U your_db_user guangfu_prod > backup_$(date +%Y%m%d).sql
 
    # 還原
-   docker-compose exec -T postgres psql -U your_db_user guangfu_prod < backup_20241009.sql
+   docker compose exec -T postgres psql -U your_db_user guangfu_prod < backup_20241009.sql
    ```
 
 3. **監控日誌**
