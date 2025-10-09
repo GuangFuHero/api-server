@@ -134,7 +134,7 @@ async def exchange_token_authorization_code(db: Session, code: str, state: str) 
         if verify_resp.status_code != 200:
             logger.error(f"ID Token 驗證失敗: {verify_resp.text}")
             raise HTTPException(status_code=400, detail="ID Token 驗證失敗")
-        
+
         decoded = verify_resp.json()
         logger.info(f"ID Token 驗證成功: {decoded}")
 
@@ -229,7 +229,7 @@ async def exchange_token_refresh(db: Session, refresh_token: str) -> Dict:
     user = db.query(LineUser).filter(LineUser.refresh_token == refresh_token).first()
     if not user:
         raise HTTPException(status_code=404, detail="找不到對應的使用者")
-    
+
     user.access_token = access_token
     user.refresh_token = new_refresh_token
     user.token_expires_at = datetime.utcnow() + timedelta(seconds=int(expires_in))
