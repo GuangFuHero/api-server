@@ -12,7 +12,7 @@ APP_DIR="/home/deploy/api-server"
 COMPOSE_FILE="guanfu_backend/docker-compose.yaml"
 
 echo "=========================================="
-echo "Starting deployment of GuanFu Backend v${VERSION}"
+echo "Starting deployment of GuanFu Backend ${VERSION}"
 echo "=========================================="
 
 # Navigate to app directory

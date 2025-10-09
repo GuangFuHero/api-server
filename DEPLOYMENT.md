@@ -46,7 +46,49 @@ cat ~/.ssh/guangfu_deploy.pub >> ~/.ssh/authorized_keys
 chmod 600 ~/.ssh/authorized_keys
 ```
 
-### 3. GitHub Secrets 設定
+### 3. SSH 安全加固（可選但建議）
+
+為了增強安全性，可以設定 SSH 命令限制，只允許執行特定的部署相關命令：
+
+```bash
+# 在 VM 上的 deploy 用戶執行
+cd /home/deploy
+
+# 複製 deploy-wrapper.sh（從 repository）
+cp api-server/deploy-wrapper.sh .
+chmod +x deploy-wrapper.sh
+
+# 創建日誌目錄
+mkdir -p /home/deploy/logs
+
+# 修改 ~/.ssh/authorized_keys，在公鑰前面加上命令限制
+# 編輯 authorized_keys
+vim ~/.ssh/authorized_keys
+
+# 在公鑰前面加上以下內容（整行）：
+# command="/home/deploy/deploy-wrapper.sh",no-port-forwarding,no-X11-forwarding,no-agent-forwarding ssh-ed25519 AAAA...
+
+# 完整範例：
+# command="/home/deploy/deploy-wrapper.sh",no-port-forwarding,no-X11-forwarding,no-agent-forwarding ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIxxx... deploy@guangfu
+```
+
+**說明：**
+
+- `command="/home/deploy/deploy-wrapper.sh"` - 限制只能執行 wrapper 腳本
+- `no-port-forwarding` - 禁止 port forwarding
+- `no-X11-forwarding` - 禁止 X11 forwarding
+- `no-agent-forwarding` - 禁止 agent forwarding
+
+這樣設定後，所有透過此 SSH key 的連線都會被限制只能執行 `deploy-wrapper.sh` 允許的命令。
+
+**查看部署日誌：**
+
+```bash
+# 在 VM 上查看部署日誌
+tail -f /home/deploy/logs/deploy.log
+```
+
+### 4. GitHub Secrets 設定
 
 在 GitHub Repository 的 Settings > Secrets and variables > Actions 中新增：
 
@@ -55,14 +97,14 @@ chmod 600 ~/.ssh/authorized_keys
 | `VM_HOST`        | GCP VM 的 IP 位址 | `34.80.123.45`                   |
 | `DEPLOY_SSH_KEY` | deploy 用戶的私鑰 | 完整的私鑰內容（包含 BEGIN/END） |
 
-### 4. 生產環境配置
+### 5. 生產環境配置
 
 在 GCP VM 上設定 `.env` 檔案：
 
 ```bash
 cd /home/deploy/api-server/guanfu_backend
 cp .env.example .env
-nano .env
+vim .env
 ```
 
 **必須修改的環境變數：**
@@ -77,12 +119,9 @@ POSTGRES_USER=your_db_user
 POSTGRES_PASSWORD=your_strong_password_here
 POSTGRES_DB=guangfu_prod
 
-# API 金鑰（如果有）
-API_KEY=your_production_api_key
-
 ```
 
-### 5. 首次部署
+### 6. 首次部署
 
 在 VM 上手動執行首次部署：
 
