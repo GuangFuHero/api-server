@@ -1,4 +1,4 @@
-from pydantic import BaseModel, constr, Field, NonNegativeInt
+from pydantic import BaseModel, constr, Field, NonNegativeInt, HttpUrl
 from typing import List, Optional, Annotated, Any
 import datetime
 from .enum_serializer import *
@@ -37,7 +37,7 @@ class VolunteerOrgBase(BaseModel):
     service_content: Optional[str] = None
     meeting_info: Optional[str] = None
     notes: Optional[str] = None
-    image_url: Optional[str] = None # Todo:需要協助補上驗證規則
+    image_url: Optional[HttpUrl] = None
 
 
 class VolunteerOrgCreate(VolunteerOrgBase):
@@ -54,7 +54,7 @@ class VolunteerOrgPatch(BaseModel):
     service_content: Optional[str] = None
     meeting_info: Optional[str] = None
     notes: Optional[str] = None
-    image_url: Optional[str] = None # Todo:需要協助補上驗證規則
+    image_url: Optional[HttpUrl] = None
 
 
 class VolunteerOrganization(VolunteerOrgBase, BaseColumn):
@@ -76,7 +76,7 @@ class VolunteerOrgCollection(CollectionBase):
 class ShelterBase(BaseModel):
     name: str
     location: str
-    phone: str
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話
     status: str
     link: Optional[str] = None
     capacity: Optional[int] = None
@@ -88,15 +88,15 @@ class ShelterBase(BaseModel):
     coordinates: Optional[Coordinates] = None
     opening_hours: Optional[str] = None
 
-# Todo:需要協助補上驗證規則 like link
 class ShelterCreate(ShelterBase):
     status: ShelterStatusEnum
+    link: Optional[HttpUrl] = None
 
 
 class ShelterPatch(BaseModel):
     name: Optional[str] = None
     location: Optional[str] = None
-    phone: Optional[str] = None
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話
     status: ShelterStatusEnum
     link: Optional[str] = None
     capacity: Optional[int] = None
@@ -128,7 +128,7 @@ class MedicalStationBase(BaseModel):
     status: str
     location: Optional[str] = None
     detailed_address: Optional[str] = None
-    phone: Optional[str] = None
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話
     contact_person: Optional[str] = None
     services: Optional[List[str]] = []
     operating_hours: Optional[str] = None
@@ -140,9 +140,10 @@ class MedicalStationBase(BaseModel):
     notes: Optional[str] = None
     link: Optional[str] = None
 
-# Todo:需要協助補上驗證規則 like phone and link
 class MedicalStationCreate(MedicalStationBase):
     str: MedicalStationStatusEnum
+    link: Optional[HttpUrl] = None
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話
 
 
 class MedicalStationPatch(BaseModel):
@@ -151,7 +152,7 @@ class MedicalStationPatch(BaseModel):
     status: Optional[MedicalStationStatusEnum] = None
     location: Optional[str] = None
     detailed_address: Optional[str] = None
-    phone: Optional[str] = None
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話
     contact_person: Optional[str] = None
     services: Optional[List[str]] = None
     operating_hours: Optional[str] = None
@@ -302,7 +303,6 @@ class GenderSchedule(BaseModel):
     male: Optional[List[str]] = []
     female: Optional[List[str]] = []
 
-# Todo:需要協助補上驗證規則 like phone
 class ShowerStationBase(BaseModel):
     name: str
     address: str
@@ -313,7 +313,7 @@ class ShowerStationBase(BaseModel):
     status: str
     requires_appointment: bool
     coordinates: Optional[Coordinates] = None
-    phone: Optional[str] = None
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話
     gender_schedule: Optional[GenderSchedule] = None
     capacity: Optional[int] = None
     pricing: Optional[str] = None
@@ -339,7 +339,7 @@ class ShowerStationPatch(BaseModel):
     status: Optional[ShowerStationStatusEnum] = None
     requires_appointment: Optional[bool] = None
     coordinates: Optional[Coordinates] = None
-    phone: Optional[str] = None
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話
     gender_schedule: Optional[GenderSchedule] = None
     capacity: Optional[int] = None
     pricing: Optional[str] = None
@@ -372,7 +372,7 @@ class WaterRefillStationBase(BaseModel):
     status: WaterRefillStationStatusEnum
     accessibility: bool
     coordinates: Optional[Coordinates] = None
-    phone: Optional[str] = None
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話
     container_required: Optional[str] = None
     daily_capacity: Optional[int] = None
     water_quality: Optional[str] = None
@@ -381,10 +381,10 @@ class WaterRefillStationBase(BaseModel):
     notes: Optional[str] = None
     info_source: Optional[str] = None
 
-# Todo:需要協助補上驗證規則 like phone
 class WaterRefillStationCreate(WaterRefillStationBase):
     water_type: WaterTypeEnum
     status: WaterRefillStationStatusEnum
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話  
 
 
 class WaterRefillStationPatch(BaseModel):
@@ -396,7 +396,7 @@ class WaterRefillStationPatch(BaseModel):
     status: Optional[WaterRefillStationStatusEnum] = None
     accessibility: Optional[bool] = None
     coordinates: Optional[Coordinates] = None
-    phone: Optional[str] = None
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話
     container_required: Optional[str] = None
     daily_capacity: Optional[int] = None
     water_quality: Optional[str] = None
@@ -429,7 +429,7 @@ class RestroomBase(BaseModel):
     has_lighting: bool
     status: str
     coordinates: Optional[Coordinates] = None
-    phone: Optional[str] = None
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話
     male_units: Optional[int] = None
     female_units: Optional[int] = None
     unisex_units: Optional[int] = None
@@ -441,10 +441,10 @@ class RestroomBase(BaseModel):
     notes: Optional[str] = None
     info_source: Optional[str] = None
 
-# Todo:需要協助補上驗證規則 like phone and cleanliness
 class RestroomCreate(RestroomBase):
     facility_type: RestroomFacilityTypeEnum
     status: RestroomStatusEnum
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話
 
 
 class RestroomPatch(BaseModel):
@@ -457,7 +457,7 @@ class RestroomPatch(BaseModel):
     has_lighting: Optional[bool] = None
     status: Optional[RestroomStatusEnum] = None
     coordinates: Optional[Coordinates] = None
-    phone: Optional[str] = None
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話
     male_units: Optional[int] = None
     female_units: Optional[int] = None
     unisex_units: Optional[int] = None
@@ -487,7 +487,7 @@ class RestroomCollection(CollectionBase):
 class HumanResourceBase(BaseModel):
     org: str
     address: str
-    phone: str
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話
     status: str
     is_completed: bool
     role_name: str
@@ -508,7 +508,6 @@ class HumanResourceBase(BaseModel):
     assignment_count: Optional[int] = None
     assignment_notes: Optional[str] = None
 
-# Todo:需要協助補上驗證規則 like phone
 class HumanResourceCreate(HumanResourceBase):
     status: HumanResourceStatusEnum
     role_type: HumanResourceRoleTypeEnum
@@ -516,12 +515,13 @@ class HumanResourceCreate(HumanResourceBase):
     experience_level: Optional[HumanResourceExperienceLevelEnum] = None
     is_completed: Optional[bool] = False
     headcount_got: Optional[int] = 0
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話    
 
 
 class HumanResourcePatch(BaseModel):
     org: Optional[str] = None
     address: Optional[str] = None
-    phone: Optional[str] = None
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話
     status: Optional[HumanResourceStatusEnum] = None
     is_completed: Optional[bool] = None
     role_name: Optional[str] = None
@@ -614,7 +614,7 @@ class SupplyItemCollection(CollectionBase):
 class SupplyBase(BaseModel):
     name: Optional[str] = None
     address: Optional[str] = None
-    phone: Optional[str] = None
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話
     notes: Optional[str] = None
 
 
@@ -625,7 +625,7 @@ class SupplyCreate(SupplyBase):
 class SupplyPatch(BaseModel):
     name: Optional[str] = None
     address: Optional[str] = None
-    phone: Optional[str] = None
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話
     notes: Optional[str] = None
     valid_pin: Optional[str] = None
     spam_warn: Optional[bool] = None
@@ -661,7 +661,7 @@ class SupplyItemDistribution(BaseModel):
 
 class SupplyProviderBase(BaseModel):
     name: str
-    phone: str
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話
     supply_item_id: str
     address: str
     notes: Optional[str] = None
@@ -675,7 +675,7 @@ class SupplyProviderCreate(SupplyProviderBase):
 
 class SupplyProviderPatch(BaseModel):
     name: Optional[str] = None
-    phone: Optional[str] = None
+    phone: Optional[str] = Field(None,  pattern=r'^(?:\+8869\d{8}|09\d{8}|(?:\+886|0)[2-8]\d{7,8})$') # 可同時支援手機與市話
     supply_item_id: Optional[str] = None
     address: Optional[str] = None
     notes: Optional[str] = None
