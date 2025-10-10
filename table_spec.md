@@ -274,6 +274,21 @@
 | unit | string | 否 | 物資的單位 | 箱 |
 
 
+### supply_provider
+
+| 欄位名稱 | 資料類型 | 必填 | 說明 | 範例 |
+| --- | --- | --- | --- | --- |
+| id | string | 是 | 需求唯一識別碼 | 31f95ee9-e920-4f44-95a2-d40ded631893 |
+| name | string | 否 | 物資名稱 | OOOO |
+| phone | string | 是 | 連絡電話 | 03-8701129 |
+| supply_item_id | string | 是 | 對應的物資ID | 26f95ee9-e920-4f44-95a2-d40ded631893 |
+| address | string | 是 | 地址 | 花蓮縣光復鄉中山路三段75號 |
+| notes | string | 否 | 備註 | 無 |
+| provide_count | number | 否 | 已取得的物資數量 | 1 |
+| provide_unit | string | 否 | 物資的單位 | 箱 |
+| created_at | number | 是 | 建立時間（Unix timestamp） | 1727664000 |
+| updated_at | number | 是 | 更新時間（Unix timestamp） | 1727750400 |
+
 
 ## Table & UI Mapping
 

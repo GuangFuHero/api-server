@@ -23,6 +23,7 @@ from .routers import (
     shower_stations,
     supplies,
     supply_items,
+    supply_providers,
     volunteer_organizations,
     water_refill_stations,
 )
@@ -39,10 +40,21 @@ async def lifespan(app: FastAPI):
 
 # --- 根據環境動態設定 Swagger UI 的伺服器 URL ---
 servers = [
-    {"url": f"http://localhost:{settings.SERVER_PORT}", "description": "本地開發 (Dev)"},
-    {"url": f"{settings.LAN_SERVER_URL}:{settings.SERVER_PORT}", "description": "LAN 主機環境 (Test On LAN)"},
+    {
+        "url": f"http://localhost:{settings.SERVER_PORT}",
+        "description": "本地開發 (Local)",
+    },
+    {
+        "url": f"{settings.LAN_SERVER_URL}:{settings.SERVER_PORT}",
+        "description": "LAN 主機環境 (Test On LAN)",
+    },
 ]
-if settings.ENVIRONMENT == "prod":
+if settings.ENVIRONMENT == "dev":
+    servers.insert(
+        0, {"url": settings.DEV_SERVER_URL, "description": "測試環境 (development)"}
+    )
+
+elif settings.ENVIRONMENT == "prod":
     servers.insert(
         0, {"url": settings.PROD_SERVER_URL, "description": "線上服務 (Production)"}
     )
@@ -138,3 +150,4 @@ app.include_router(water_refill_stations.router)
 app.include_router(supplies.router)
 app.include_router(supply_items.router)
 app.include_router(marquee_announcement.router)
+app.include_router(supply_providers.router)

@@ -24,7 +24,8 @@ class Settings(BaseSettings):
     INSTANCE_CONNECTION_NAME: str = ""
 
     # PROD_SERVER_URL 可以有預設值，因為它不是敏感資訊
-    PROD_SERVER_URL: str = "https://uat-api.gf250923.org"
+    PROD_SERVER_URL: str = "https://api.gf250923.org"
+    DEV_SERVER_URL: str = "https://uat-api.gf250923.org"
 
     # LAN_SERVER_URL 如果在本地的 LAN 主機做為測試環境，可使用此 URL
     LAN_SERVER_URL: str = "http://192.168.1.107"
