@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🏔️ 花蓮光復救災平台 API Server
+# 🏔️ 光復超人 API Server
 
 ### 復原之路，科技相助 🤝
 
