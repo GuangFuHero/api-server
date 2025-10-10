@@ -39,7 +39,12 @@ USER nonroot
 # Use `/app` as the working directory
 WORKDIR /app
 
+# Copy application source code
 COPY src/ src/
+
+# Copy Alembic configuration and migrations
+COPY alembic.ini alembic.ini
+COPY migrations/ migrations/
 
 EXPOSE 8080
 

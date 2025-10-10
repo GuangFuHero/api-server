@@ -94,6 +94,20 @@ for i in {1..30}; do
     sleep 2
 done
 
+# Run database migrations after backend is ready
+echo "Running database migrations..."
+if docker compose ps postgres | grep -q "Up"; then
+    echo "Database is running, executing migrations..."
+    docker compose exec -T backend alembic upgrade head || {
+        echo "✗ Migration failed, check logs:"
+        docker compose logs backend
+        exit 1
+    }
+    echo "✓ Migrations completed successfully!"
+else
+    echo "Warning: Database container not running, skipping migrations"
+fi
+
 # Show recent logs (last 20 lines)
 echo "=========================================="
 echo "Recent logs:"
