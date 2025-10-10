@@ -756,7 +756,7 @@ class LineTokenResponse(BaseModel):
     token_type: str = Field(default="Bearer", description="權杖類型")
     expires_in: int = Field(..., description="權杖有效期限（秒）")
     line_user_id: Optional[str] = Field(..., description="LINE 使用者 ID")
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -778,7 +778,7 @@ class LineUserInfoResponse(BaseModel):
     email: Optional[str] = Field(None, description="使用者電子郵件")
     email_granted: bool = Field(default=False, description="是否授予電子郵件權限")
     scope: str = Field(..., description="授權範圍")
-    
+
     class Config:
         json_schema_extra = {
             "example": {
