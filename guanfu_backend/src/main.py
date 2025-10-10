@@ -24,6 +24,7 @@ from .routers import (
     supply_items,
     volunteer_organizations,
     water_refill_stations,
+    oauth2,
 )
 
 
@@ -136,3 +137,4 @@ app.include_router(shower_stations.router)
 app.include_router(water_refill_stations.router)
 app.include_router(supplies.router)
 app.include_router(supply_items.router)
+app.include_router(oauth2.router)
