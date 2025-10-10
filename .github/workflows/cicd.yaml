@@ -60,17 +60,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Copy deploy-wrapper to server
-        uses: appleboy/scp-action@v1.0.0
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: deploy
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: 22
-          source: "deploy-wrapper.sh"
-          target: "/home/deploy/"
-          overwrite: true
-
       - name: Deploy to GCP VM via SSH
         uses: appleboy/ssh-action@v1.2.2
         env:

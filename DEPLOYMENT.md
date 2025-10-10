@@ -77,7 +77,10 @@ vim ~/.ssh/authorized_keys
 
 這樣設定後，所有透過此 SSH key 的連線都會被限制只能執行 `deploy-wrapper.sh` 允許的命令。
 
-**注意：** CI/CD 會在每次部署時自動更新 `/home/deploy/deploy-wrapper.sh` 到最新版本，無需手動維護。
+**注意事項：**
+- deploy-wrapper.sh 設定後，**無法透過此 SSH key 使用 SCP** 上傳檔案
+- 如需更新 deploy-wrapper.sh，需要暫時移除 `command=` 限制，或使用其他 SSH key
+- 建議將 deploy-wrapper.sh 納入版本控制，透過 git pull 更新
 
 **查看部署日誌：**
 
@@ -193,7 +196,6 @@ git push origin v1.0.0
 2. **GitHub Actions 自動執行**
 
    - 觸發 `.github/workflows/cicd.yaml`
-   - 上傳 `deploy-wrapper.sh` 到 VM（更新安全規則）
    - SSH 連接到 GCP VM，並傳遞環境變數（DB_PASS、API_KEY_LIST 等）
    - 執行 `deploy.sh` 腳本：
      1. Git pull 最新代碼（包含 `setup-env.sh`）
@@ -438,7 +440,7 @@ cat ~/.ssh/authorized_keys
 
    - 定期更新 Docker 映像基底
    - 更新系統套件：`sudo apt update && sudo apt upgrade`
-   - CI/CD 會自動更新 `deploy-wrapper.sh`，確保安全規則最新
+   - 如需更新 `deploy-wrapper.sh`，透過 git pull 取得最新版本後手動複製到 `/home/deploy/`
 
 3. **備份資料庫**
 
