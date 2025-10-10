@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict
 
 import httpx
-from jose import jwt
 from urllib.parse import urlencode
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
@@ -18,7 +17,7 @@ from ..models import LineUser, LineSessionState
 AUTH_URL = "https://access.line.me/oauth2/v2.1/authorize"
 TOKEN_URL = "https://api.line.me/oauth2/v2.1/token"
 USERINFO_URL = "https://api.line.me/oauth2/v2.1/userinfo"
-JWKS_URL = "https://api.line.me/oauth2/v2.1/certs"
+VERIFY_URL = "https://api.line.me/oauth2/v2.1/verify"
 REVOKE_URL = "https://api.line.me/oauth2/v2.1/revoke"
 
 # Logger
@@ -125,23 +124,21 @@ async def exchange_token_authorization_code(db: Session, code: str, state: str) 
     if not access_token or not id_token:
         raise HTTPException(status_code=400, detail="缺少 access_token 或 id_token")
 
-    # ====== 驗證 ID Token (離線 JWKS 驗證) ======
+    # ====== 使用 LINE verify endpoint 驗證 ID Token ======
     async with httpx.AsyncClient(timeout=10) as client:
-        jwks_resp = await client.get(JWKS_URL)
-        jwks = jwks_resp.json()
+        verify_data = {
+            "id_token": id_token,
+            "client_id": settings.LINE_CLIENT_ID,
+        }
+        verify_resp = await client.post(VERIFY_URL, data=verify_data)
+        if verify_resp.status_code != 200:
+            logger.error(f"ID Token 驗證失敗: {verify_resp.text}")
+            raise HTTPException(status_code=400, detail="ID Token 驗證失敗")
+        
+        decoded = verify_resp.json()
+        logger.info(f"ID Token 驗證成功: {decoded}")
 
-    try:
-        decoded = jwt.decode(
-            id_token,
-            key=jwks,
-            audience=settings.LINE_CLIENT_ID,
-            issuer="https://access.line.me",
-            options={"verify_aud": True, "verify_iss": True, "verify_exp": True},
-        )
-    except Exception as e:
-        logger.error(f"ID Token 驗證失敗: {e}")
-        raise HTTPException(status_code=400, detail="ID Token 驗證失敗")
-
+    # 驗證 nonce
     if decoded.get("nonce") != sess.nonce:
         raise HTTPException(status_code=400, detail="nonce 驗證失敗")
 
@@ -226,24 +223,25 @@ async def exchange_token_refresh(db: Session, refresh_token: str) -> Dict:
 
     access_token = token_json.get("access_token")
     new_refresh_token = token_json.get("refresh_token", refresh_token)
-    id_token = token_json.get("id_token")
     expires_in = token_json.get("expires_in", 0)
 
     # 同步更新使用者 token
     user = db.query(LineUser).filter(LineUser.refresh_token == refresh_token).first()
-    if user:
-        user.access_token = access_token
-        user.refresh_token = new_refresh_token
-        user.id_token = id_token
-        user.token_expires_at = datetime.utcnow() + timedelta(seconds=int(expires_in))
-        db.commit()
+    if not user:
+        raise HTTPException(status_code=404, detail="找不到對應的使用者")
+    
+    user.access_token = access_token
+    user.refresh_token = new_refresh_token
+    user.token_expires_at = datetime.utcnow() + timedelta(seconds=int(expires_in))
+    db.commit()
 
     return {
         "access_token": access_token,
         "refresh_token": new_refresh_token,
-        "id_token": id_token,
+        "id_token": user.id_token,
         "token_type": "Bearer",
         "expires_in": expires_in,
+        "line_user_id": user.line_user_id,
     }
 
 
