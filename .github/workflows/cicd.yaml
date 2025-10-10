@@ -24,14 +24,14 @@ jobs:
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
             echo "environment=dev" >> $GITHUB_OUTPUT
-            echo "version=latest" >> $GITHUB_OUTPUT
+            echo "version=develop" >> $GITHUB_OUTPUT
             echo "should_deploy=true" >> $GITHUB_OUTPUT
-            echo "Deploying to dev environment: latest"
+            echo "Deploying to dev environment: develop branch"
           elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "environment=production" >> $GITHUB_OUTPUT
             echo "version=latest" >> $GITHUB_OUTPUT
             echo "should_deploy=true" >> $GITHUB_OUTPUT
-            echo "Deploying to production environment: latest"
+            echo "Deploying to production environment: main branch"
           elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
             # Verify tag is on main branch
             git fetch origin main
