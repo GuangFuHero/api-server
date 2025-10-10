@@ -17,16 +17,37 @@ CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 
 
-def get_by_id(db: Session, model: Type[ModelType], id: str) -> Optional[ModelType]:
+def get_by_id(db: Session, model: Type[ModelType], id: Any) -> Optional[ModelType]:
+    """
+    以主鍵查詢；若你的 PK 是 UUID/Int，確保 id 類型與 model.id 的型別對齊。
+    """
     return db.query(model).filter(model.id == id).first()
 
 
-def get_multi(db: Session, model: Type[ModelType], skip: int = 0, limit: int = 100, order_by=None, **filters) -> List[Type[ModelType]]:
+def get_multi(
+        db: Session,
+        model: Type[ModelType],
+        skip: int = 0,
+        limit: int = 100,
+        order_by=None,
+        **filters: Any,
+) -> List[ModelType]:
+    """
+    通用列表查詢：
+    - 對 filters 做正規化（Enum -> value；移除 None）
+    - 使用 filter_by（簡單等值查詢）
+    - 支援 order_by（傳 ColumnElement，例如 model.created_at.desc()）
+    """
     query = db.query(model)
+
     if filters:
-        query = query.filter_by(**{k: v for k, v in filters.items() if v is not None})
+        normalized_filters = normalize_filters_dict(filters)
+        if normalized_filters:
+            query = query.filter_by(**normalized_filters)
+
     if order_by is not None:
         query = query.order_by(order_by)
+
     return query.offset(skip).limit(limit).all()
 
 
@@ -37,7 +58,7 @@ def orm_to_dict(obj: Any) -> dict:
     return data
 
 
-def mask_id_if_field_equals(rows, field: str, value: bool|str):
+def mask_id_if_field_equals(rows, field: str, value: bool | str):
     """When the field is value, set the id to an empty string"""
     out: List[dict] = []
     for r in rows:
@@ -234,6 +255,7 @@ def get_full_supply(db: Session, query) -> models.Supply:
         )
     )
     return query.filter(not_fulfilled_exists)
+
 
 def is_completed_supply(supply: models.Supply) -> bool:
     """Check whether the supply is completed"""

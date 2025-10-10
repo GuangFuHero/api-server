@@ -1,10 +1,11 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session
 
 from .. import crud, models, schemas
 from ..database import get_db
+from ..api_key import require_modify_api_key
 from ..enum_serializer import SupplyItemTypeEnum
 
 router = APIRouter(
@@ -52,7 +53,13 @@ def create_supply_item(
     return crud.create(db, models.SupplyItem, obj_in=schemas.SupplyItemCreate(**supply_item))
 
 
-@router.patch("/{id}", response_model=schemas.SupplyItem, status_code=200, summary="更新特定供應單物資項目")
+@router.patch(
+    "/{id}",
+    response_model=schemas.SupplyItem,
+    status_code=200,
+    summary="更新特定供應單物資項目",
+    dependencies=[Security(require_modify_api_key)],
+)
 def patch_supply_item(
         id: str, item_in: schemas.SupplyItemPatch, db: Session = Depends(get_db)
 ):

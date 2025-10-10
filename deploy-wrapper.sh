@@ -16,11 +16,16 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] Deploy command: $SSH_ORIGINAL_COMMAND" >> "
 
 # Only allow specific commands
 case "$SSH_ORIGINAL_COMMAND" in
-    # Allow deploy.sh with version parameter
-    "cd /home/deploy/api-server"$'\n'"./deploy.sh"*)
+    # Allow export commands for environment variables
+    export\ *|"export "*)
+        eval "$SSH_ORIGINAL_COMMAND"
+        ;;
+
+    # Allow deploy.sh with version parameter (with or without environment variables)
+    "cd /home/deploy/api-server"$'\n'*"./deploy.sh"*)
         cd /home/deploy/api-server && eval "${SSH_ORIGINAL_COMMAND#*$'\n'}"
         ;;
-    "cd /home/deploy/api-server && ./deploy.sh"*)
+    "cd /home/deploy/api-server && "*"./deploy.sh"*)
         cd /home/deploy/api-server && eval "${SSH_ORIGINAL_COMMAND#cd /home/deploy/api-server && }"
         ;;
 

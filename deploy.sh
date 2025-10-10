@@ -21,17 +21,32 @@ cd "${APP_DIR}"
 # Pull latest code from GitHub
 echo "Fetching latest code from GitHub..."
 git fetch --all --tags
-if [ "${VERSION}" != "latest" ]; then
-    echo "Checking out version: ${VERSION}"
-    git checkout "${VERSION}"
-else
+
+# Reset any local changes to avoid conflicts
+git reset --hard
+
+if [ "${VERSION}" == "latest" ]; then
     echo "Checking out main branch"
     git checkout main
     git pull origin main
+elif [ "${VERSION}" == "develop" ]; then
+    echo "Checking out develop branch"
+    git checkout develop
+    git pull origin develop
+else
+    echo "Checking out version: ${VERSION}"
+    git checkout "${VERSION}"
 fi
 
 # Navigate to backend directory
 cd guanfu_backend
+
+# Setup environment variables if credentials are provided
+if [ -n "${DB_PASS}" ]; then
+    echo "Generating .env file from environment variables..."
+    chmod +x setup-env.sh
+    ./setup-env.sh
+fi
 
 # Check if .env file exists
 if [ ! -f .env ]; then
