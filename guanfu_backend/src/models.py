@@ -324,4 +324,3 @@ class LineSessionState(Base):
     created_at = Column(DateTime, default=func.now())
     consumed = Column(Boolean, default=False)
     expires_at = Column(DateTime)
-
