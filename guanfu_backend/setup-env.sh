@@ -1,6 +1,11 @@
 #!/bin/bash
 # Auto-generate .env file from environment variables
-# Usage: ENVIRONMENT=dev DB_PASS=xxx API_KEY=xxx ./setup-env.sh
+# Usage:
+#   ENVIRONMENT=dev DB_PASS=xxx API_KEY_LIST=key1,key2 \
+#   LINE_CLIENT_ID=your_line_client_id \
+#   LINE_CLIENT_SECRET=your_line_client_secret \
+#   LINE_REDIRECT_URI=https://your.domain/line/callback \
+#   ./setup-env.sh
 
 set -e
 
@@ -8,6 +13,12 @@ set -e
 ENVIRONMENT=${ENVIRONMENT:-prod}
 DB_PASS=${DB_PASS:?ERROR: DB_PASS is required}
 API_KEY_LIST=${API_KEY_LIST:-}
+
+# Line Login parameters (can be overridden via environment)
+# 預設為空字串，以避免在未設定時暴露或誤用；REDIRECT_URI 提供通用 callback path
+LINE_CLIENT_ID=${LINE_CLIENT_ID:-""}
+LINE_CLIENT_SECRET=${LINE_CLIENT_SECRET:-""}
+LINE_REDIRECT_URI=${LINE_REDIRECT_URI:-""}
 
 # Database settings
 DB_USER="guangfu"
@@ -55,6 +66,13 @@ DB_NAME=${DB_NAME}
 
 # Database connection URL (auto-generated)
 DATABASE_URL=${DATABASE_URL}
+
+# ===================
+#     LINE LOGIN
+# ===================
+LINE_CLIENT_ID=${LINE_CLIENT_ID}
+LINE_CLIENT_SECRET=${LINE_CLIENT_SECRET}
+LINE_REDIRECT_URI=${LINE_REDIRECT_URI}
 EOF
 
 # Verify .env file was created
