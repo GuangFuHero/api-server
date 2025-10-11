@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Security
+from fastapi import APIRouter, Depends, HTTPException, Query, Security, Request
 from sqlalchemy.orm import Session
 from typing import Optional
 from .. import crud, models, schemas
@@ -15,6 +15,7 @@ router = APIRouter(
 
 @router.get("", response_model=schemas.MedicalStationCollection, summary="取得醫療站清單")
 def list_medical_stations(
+        request: Request,
         status: Optional[MedicalStationStatusEnum] = Query(None),
         station_type: Optional[MedicalStationTypeEnum] = Query(None),
         limit: int = Query(50, ge=1, le=500),
@@ -27,7 +28,8 @@ def list_medical_stations(
     filters = {"status": status, "station_type": station_type}
     stations = crud.get_multi(db, models.MedicalStation, skip=offset, limit=limit, **filters)
     total = crud.count(db, models.MedicalStation, **filters)
-    return {"member": stations, "totalItems": total, "limit": limit, "offset": offset}
+    next_link = crud.build_next_link(request, limit=limit, offset=offset, total=total)
+    return {"member": stations, "totalItems": total, "limit": limit, "offset": offset, "next": next_link}
 
 
 @router.post("", response_model=schemas.MedicalStation, status_code=201, summary="建立醫療站")

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Security
+from fastapi import APIRouter, Depends, HTTPException, Query, Security, Request
 from sqlalchemy.orm import Session
 
 from .. import crud, models, schemas
@@ -14,6 +14,7 @@ router = APIRouter(
 
 @router.get("", response_model=schemas.VolunteerOrgCollection, summary="取得志工招募單位清單")
 def list_volunteer_orgs(
+        request: Request,
         limit: int = Query(20, ge=1, le=200),
         offset: int = Query(0, ge=0),
         db: Session = Depends(get_db)
@@ -23,7 +24,8 @@ def list_volunteer_orgs(
     """
     orgs = crud.get_multi(db, models.VolunteerOrganization, skip=offset, limit=limit)
     total = crud.count(db, models.VolunteerOrganization)
-    return {"member": orgs, "totalItems": total, "limit": limit, "offset": offset}
+    next_link = crud.build_next_link(request, limit=limit, offset=offset, total=total)
+    return {"member": orgs, "totalItems": total, "limit": limit, "offset": offset, "next": next_link}
 
 
 @router.post("", response_model=schemas.VolunteerOrganization, status_code=201, summary="建立志工招募單位")

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Security
+from fastapi import APIRouter, Depends, HTTPException, Query, Security, Request
 from sqlalchemy.orm import Session
 from typing import Optional, Literal
 from .. import crud, models, schemas
@@ -16,6 +16,7 @@ router = APIRouter(
 
 @router.get("", response_model=schemas.HumanResourceCollection, summary="取得人力需求清單")
 def list_human_resources(
+        request: Request,
         status: Optional[HumanResourceStatusEnum] = Query(None),
         role_status: Optional[HumanResourceRoleStatusEnum] = Query(None),
         role_type: Optional[HumanResourceRoleTypeEnum] = Query(None),
@@ -51,7 +52,8 @@ def list_human_resources(
     )
     resources = crud.mask_id_if_field_equals(resources, "status", "completed")
     total = crud.count(db, models.HumanResource, **filters)
-    return {"member": resources, "totalItems": total, "limit": limit, "offset": offset}
+    next_link = crud.build_next_link(request, limit=limit, offset=offset, total=total)
+    return {"member": resources, "totalItems": total, "limit": limit, "offset": offset, "next": next_link}
 
 
 @router.post("", response_model=schemas.HumanResourceWithPin, status_code=201, summary="建立人力需求")

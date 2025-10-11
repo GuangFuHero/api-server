@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Security
+from fastapi import APIRouter, Depends, HTTPException, Query, Security, Request
 from sqlalchemy.orm import Session
 
 from .. import crud, models, schemas
@@ -17,6 +17,7 @@ router = APIRouter(
 
 @router.get("", response_model=schemas.SupplyItemCollection, summary="取得特定供應單物資項目清單")
 def list_supply_items(
+        request: Request,
         supply_id: Optional[str] = Query(None),
         tag: Optional[SupplyItemTypeEnum] = Query(None),
         limit: int = Query(100, ge=1, le=500),
@@ -29,7 +30,8 @@ def list_supply_items(
     filters = {"supply_id": supply_id, "tag": tag.value if tag else None, }
     items = crud.get_multi(db, models.SupplyItem, skip=offset, limit=limit, **filters)
     total = crud.count(db, models.SupplyItem, **filters)
-    return {"member": items, "totalItems": total, "limit": limit, "offset": offset}
+    next_link = crud.build_next_link(request, limit=limit, offset=offset, total=total)
+    return {"member": items, "totalItems": total, "limit": limit, "offset": offset, "next": next_link}
 
 
 @router.post("", response_model=schemas.SupplyItem, status_code=201, summary="建立特定供應單物資項目")

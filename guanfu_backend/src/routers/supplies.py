@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Security
+from fastapi import APIRouter, Depends, HTTPException, Query, Security, Request
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List, Literal
 from .. import crud, models, schemas
@@ -15,6 +15,7 @@ router = APIRouter(
 
 @router.get("", response_model=schemas.SupplyCollection, summary="取得供應單清單")
 def list_supplies(
+        request: Request,
         embed: Optional[str] = Query(None, enum=["all"]),
         limit: int = Query(50, ge=1, le=500),
         offset: int = Query(0, ge=0),
@@ -47,8 +48,8 @@ def list_supplies(
     
     # 使用 crud.count 取得總數
     total = crud.count(db, model=models.Supply)
-
-    return {"member": supplies, "totalItems": total, "limit": limit, "offset": offset}
+    next_link = crud.build_next_link(request, limit=limit, offset=offset, total=total)
+    return {"member": supplies, "totalItems": total, "limit": limit, "offset": offset, "next": next_link}
 
 
 @router.post("", response_model=schemas.SupplyWithPin, status_code=201, summary="建立供應單")
