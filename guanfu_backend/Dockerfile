@@ -12,9 +12,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
   --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
   --mount=type=bind,source=.python-version,target=.python-version \
   uv sync --locked --no-install-project --no-dev
-# COPY uv.lock 
-# RUN --mount=type=cache,target=/root/.cache/uv \
-#   uv sync --locked --no-dev
+COPY uv.lock pyproject.toml .python-version ./
+RUN --mount=type=cache,target=/root/.cache/uv \
+  uv sync --locked --no-dev
 
 
 # Then, use a final image without uv
@@ -45,7 +45,7 @@ EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:${PORT:-8080}/docs').read()" || exit 1
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:${PORT:-8080}/docs').read()" || exit 1
 
 # Start application
 CMD uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8080} --workers 1 --log-level info --no-access-log
