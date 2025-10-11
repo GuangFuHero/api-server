@@ -68,6 +68,9 @@ jobs:
           ENVIRONMENT: ${{ needs.init.outputs.environment }}
           DB_PASS: ${{ secrets.POSTGRES_PASSWORD }}
           API_KEY_LIST: ${{ secrets.ALLOW_MODIFY_API_KEY_LIST }}
+          LINE_CLIENT_ID : ${{ secrets.LINE_CLIENT_ID }}
+          LINE_CLIENT_SECRET: ${{ secrets.LINE_CLIENT_SECRET }}
+          LINE_REDIRECT_URI: ${{ secrets.LINE_REDIRECT_URI }}
         with:
           host: ${{ secrets.VM_HOST }}
           username: deploy
