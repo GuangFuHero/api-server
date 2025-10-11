@@ -33,6 +33,7 @@ class CollectionBase(BaseModel):
     totalItems: int
     limit: int
     offset: int
+    next: Optional[str] = None
     member: List[Any]
 
 
@@ -790,3 +791,67 @@ class LineUserInfoResponse(BaseModel):
                 "scope": "profile openid"
             }
         }
+
+
+# ===================================================================        
+# 場所 (Places)
+# ===================================================================
+
+class PlaceBase(BaseModel):
+    name: str
+    address: str
+    address_description: Optional[str] = None
+    coordinates: dict  # JSONB: {lat: float, lng: float, ...}
+    type: str
+    sub_type: Optional[str] = None
+    info_sources: Optional[List[str]] = []
+    verified_at: Optional[int] = None
+    website_url: Optional[str] = None
+    status: str
+    resources: Optional[List[dict]] = None
+    open_date: Optional[str] = None
+    end_date: Optional[str] = None
+    open_time: Optional[str] = None
+    end_time: Optional[str] = None
+    contact_name: str
+    contact_phone: str
+    notes: Optional[str] = None
+    tags: Optional[List[dict]] = None
+    additional_info: Optional[dict] = None
+
+
+class PlaceCreate(PlaceBase):
+    type: PlaceTypeEnum
+    status: PlaceStatusEnum
+
+
+class PlacePatch(BaseModel):
+    name: Optional[str] = None
+    address: Optional[str] = None
+    address_description: Optional[str] = None
+    coordinates: Optional[dict] = None
+    type: Optional[PlaceTypeEnum] = None
+    sub_type: Optional[str] = None
+    info_sources: Optional[List[str]] = None
+    verified_at: Optional[int] = None
+    website_url: Optional[str] = None
+    status: Optional[PlaceStatusEnum] = None
+    resources: Optional[List[dict]] = None
+    open_date: Optional[str] = None
+    end_date: Optional[str] = None
+    open_time: Optional[str] = None
+    end_time: Optional[str] = None
+    contact_name: Optional[str] = None
+    contact_phone: Optional[str] = None
+    notes: Optional[str] = None
+    tags: Optional[List[dict]] = None
+    additional_info: Optional[dict] = None
+
+
+class Place(PlaceBase, BaseColumn):
+    class Config:
+        from_attributes = True
+
+
+class PlaceCollection(CollectionBase):
+    member: List[Place]

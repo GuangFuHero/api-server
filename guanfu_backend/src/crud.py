@@ -1,6 +1,7 @@
 from typing import List, Optional, Type, TypeVar
+from urllib.parse import urlencode
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy import exists, and_
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
@@ -22,6 +23,16 @@ def get_by_id(db: Session, model: Type[ModelType], id: Any) -> Optional[ModelTyp
     以主鍵查詢；若你的 PK 是 UUID/Int，確保 id 類型與 model.id 的型別對齊。
     """
     return db.query(model).filter(model.id == id).first()
+
+
+def build_next_link(request: Request, *, limit: int, offset: int, total: int) -> Optional[str]:
+    """回傳相對路徑的下一頁連結，如 /shelters?...&limit=50&offset=100"""
+    if offset + limit >= total:
+        return None
+    q = dict(request.query_params)  # 保留原查詢參數（例如 status、embed 等）
+    q["limit"] = str(limit)
+    q["offset"] = str(offset + limit)
+    return f"{request.url.path}?{urlencode(q, doseq=True)}"
 
 
 def get_multi(

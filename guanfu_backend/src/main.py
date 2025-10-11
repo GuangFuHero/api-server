@@ -16,6 +16,7 @@ from .routers import (
     human_resources,
     medical_stations,
     mental_health_resources,
+    places,
     reports,
     restrooms,
     shelters,
@@ -144,6 +145,7 @@ app.include_router(accommodations.router)
 app.include_router(human_resources.router)
 app.include_router(medical_stations.router)
 app.include_router(mental_health_resources.router)
+app.include_router(places.router)
 app.include_router(restrooms.router)
 app.include_router(shower_stations.router)
 app.include_router(water_refill_stations.router)

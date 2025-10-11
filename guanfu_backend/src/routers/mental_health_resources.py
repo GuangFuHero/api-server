@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Security
+from fastapi import APIRouter, Depends, HTTPException, Query, Security, Request
 from sqlalchemy.orm import Session
 from typing import Optional
 from .. import crud, models, schemas
@@ -15,6 +15,7 @@ router = APIRouter(
 
 @router.get("", response_model=schemas.MentalHealthResourceCollection, summary="取得心理健康資源清單")
 def list_mental_health_resources(
+        request: Request,
         status: Optional[MentalHealthResourceStatusEnum] = Query(None),
         duration_type: Optional[MentalHealthDurationEnum] = Query(None),
         service_format: Optional[MentalHealthFormatEnum] = Query(None),
@@ -32,7 +33,8 @@ def list_mental_health_resources(
     }
     resources = crud.get_multi(db, models.MentalHealthResource, skip=offset, limit=limit, **filters)
     total = crud.count(db, models.MentalHealthResource, **filters)
-    return {"member": resources, "totalItems": total, "limit": limit, "offset": offset}
+    next_link = crud.build_next_link(request, limit=limit, offset=offset, total=total)
+    return {"member": resources, "totalItems": total, "limit": limit, "offset": offset, "next": next_link}
 
 
 @router.post("", response_model=schemas.MentalHealthResource, status_code=201, summary="建立心理健康資源")

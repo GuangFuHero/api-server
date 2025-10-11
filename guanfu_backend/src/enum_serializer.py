@@ -179,3 +179,20 @@ class ReportStatusEnum(enum.Enum):
     # 規格為字串 'true' / 'false'（非布林）
     true = "true"
     false = "false"
+
+
+class PlaceStatusEnum(enum.Enum):
+    open = "開放"
+    paused = "暫停"
+    closed = "關閉"
+
+
+class PlaceTypeEnum(enum.Enum):
+    medical = "醫療"
+    water = "加水"
+    restroom = "廁所"
+    shower = "洗澡"
+    shelter = "避難"
+    accommodation = "住宿"
+    supplies = "物資"
+    mental_health = "心理援助"

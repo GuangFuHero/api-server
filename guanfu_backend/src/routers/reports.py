@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Security
+from fastapi import APIRouter, Depends, HTTPException, Query, Security, Request
 from sqlalchemy.orm import Session
 from typing import Optional
 from .. import crud, models, schemas
@@ -14,6 +14,7 @@ router = APIRouter(
 
 @router.get("", response_model=schemas.ReportCollection, summary="取得回報事件清單")
 def list_reports(
+        request: Request,
         status: Optional[str] = Query(None),
         limit: int = Query(50, ge=1, le=500),
         offset: int = Query(0, ge=0),
@@ -25,7 +26,8 @@ def list_reports(
     filters = {"status": status}
     reports = crud.get_multi(db, models.Report, skip=offset, limit=limit, **filters)
     total = crud.count(db, models.Report, **filters)
-    return {"member": reports, "totalItems": total, "limit": limit, "offset": offset}
+    next_link = crud.build_next_link(request, limit=limit, offset=offset, total=total)
+    return {"member": reports, "totalItems": total, "limit": limit, "offset": offset, "next": next_link}
 
 
 @router.post("", response_model=schemas.Report, status_code=201, summary="建立回報事件")

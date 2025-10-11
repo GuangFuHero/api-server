@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Security
+from fastapi import APIRouter, Depends, HTTPException, Query, Security, Request
 from sqlalchemy.orm import Session
 from typing import Optional
 from .. import crud, models, schemas
@@ -15,6 +15,7 @@ router = APIRouter(
 
 @router.get("", response_model=schemas.AccommodationCollection, summary="取得庇護所清單")
 def list_accommodations(
+        request: Request,
         status: Optional[AccommodationStatusEnum] = Query(None),
         township: Optional[str] = Query(None),
         has_vacancy: Optional[AccommodationVacancyEnum] = Query(None),
@@ -32,7 +33,8 @@ def list_accommodations(
     }
     accommodations = crud.get_multi(db, models.Accommodation, skip=offset, limit=limit, **filters)
     total = crud.count(db, models.Accommodation, **filters)
-    return {"member": accommodations, "totalItems": total, "limit": limit, "offset": offset}
+    next_link = crud.build_next_link(request, limit=limit, offset=offset, total=total)
+    return {"member": accommodations, "totalItems": total, "limit": limit, "offset": offset, "next": next_link}
 
 
 @router.post("", response_model=schemas.Accommodation, status_code=201, summary="建立庇護所")
