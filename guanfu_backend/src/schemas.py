@@ -33,6 +33,7 @@ class CollectionBase(BaseModel):
     totalItems: int
     limit: int
     offset: int
+    next: Optional[str] = None
     member: List[Any]
 
 

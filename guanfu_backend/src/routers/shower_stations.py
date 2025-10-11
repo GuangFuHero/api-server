@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Security
+from fastapi import APIRouter, Depends, HTTPException, Query, Security, Request
 from sqlalchemy.orm import Session
 
 from .. import crud, models, schemas
@@ -17,6 +17,7 @@ router = APIRouter(
 
 @router.get("", response_model=schemas.ShowerStationCollection, summary="取得洗澡點清單")
 def list_shower_stations(
+        request: Request,
         status: Optional[ShowerStationStatusEnum] = Query(None),
         facility_type: Optional[ShowerFacilityTypeEnum] = Query(None),
         is_free: Optional[bool] = Query(None),
@@ -36,7 +37,8 @@ def list_shower_stations(
     }
     stations = crud.get_multi(db, models.ShowerStation, skip=offset, limit=limit, **filters)
     total = crud.count(db, models.ShowerStation, **filters)
-    return {"member": stations, "totalItems": total, "limit": limit, "offset": offset}
+    next_link = crud.build_next_link(request, limit=limit, offset=offset, total=total)
+    return {"member": stations, "totalItems": total, "limit": limit, "offset": offset, "next": next_link}
 
 
 @router.post("", response_model=schemas.ShowerStation, status_code=201, summary="建立洗澡點")
