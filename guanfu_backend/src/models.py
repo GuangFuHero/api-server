@@ -1,7 +1,7 @@
 import uuid
 import time
 from sqlalchemy import (
-    Column, String, DateTime, Integer, Boolean, Text, BigInteger, ForeignKey
+    Column, String, DateTime, Integer, Boolean, Text, BigInteger, ForeignKey, text, ARRAY
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
@@ -16,7 +16,7 @@ def generate_uuid_str():
 
 def current_timestamp_int():
     """Returns the current Unix timestamp as an integer."""
-    return int(time.time())
+    return time.time()
 
 
 # ===================================================================
@@ -42,8 +42,8 @@ class VolunteerOrganization(Base):
 class Shelter(Base):
     __tablename__ = "shelters"
     id = Column(String, primary_key=True, default=generate_uuid_str)
-    created_at = Column(BigInteger, nullable=False, default=current_timestamp_int)
-    updated_at = Column(BigInteger, nullable=False, default=current_timestamp_int, onupdate=current_timestamp_int)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
     name = Column(String, nullable=False)
     location = Column(String, nullable=False)
     phone = Column(String, nullable=False)
@@ -52,7 +52,7 @@ class Shelter(Base):
     capacity = Column(Integer)
     current_occupancy = Column(Integer)
     available_spaces = Column(Integer)
-    facilities = Column(JSONB)
+    facilities = Column(ARRAY(Text), nullable=True)
     contact_person = Column(String)
     notes = Column(Text)
     coordinates = Column(JSONB)
@@ -62,8 +62,8 @@ class Shelter(Base):
 class MedicalStation(Base):
     __tablename__ = "medical_stations"
     id = Column(String, primary_key=True, default=generate_uuid_str)
-    created_at = Column(BigInteger, nullable=False, default=current_timestamp_int)
-    updated_at = Column(BigInteger, nullable=False, default=current_timestamp_int, onupdate=current_timestamp_int)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
     station_type = Column(String, nullable=False)
     name = Column(String, nullable=False)
     status = Column(String, nullable=False)
@@ -71,9 +71,9 @@ class MedicalStation(Base):
     detailed_address = Column(String)
     phone = Column(String)
     contact_person = Column(String)
-    services = Column(JSONB)
+    services = Column(ARRAY(Text), nullable=True)
     operating_hours = Column(String)
-    equipment = Column(JSONB)
+    equipment = Column(ARRAY(Text), nullable=True)
     medical_staff = Column(Integer)
     daily_capacity = Column(Integer)
     coordinates = Column(JSONB)
@@ -85,8 +85,8 @@ class MedicalStation(Base):
 class MentalHealthResource(Base):
     __tablename__ = "mental_health_resources"
     id = Column(String, primary_key=True, default=generate_uuid_str)
-    created_at = Column(BigInteger, nullable=False, default=current_timestamp_int)
-    updated_at = Column(BigInteger, nullable=False, default=current_timestamp_int, onupdate=current_timestamp_int)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
     duration_type = Column(String, nullable=False)
     name = Column(String, nullable=False)
     service_format = Column(String, nullable=False)
@@ -96,9 +96,9 @@ class MentalHealthResource(Base):
     status = Column(String, nullable=False)
     emergency_support = Column(Boolean, nullable=False)
     website_url = Column(String)
-    target_audience = Column(JSONB)
-    specialties = Column(JSONB)
-    languages = Column(JSONB)
+    target_audience = Column(ARRAY(Text), nullable=True)
+    specialties = Column(ARRAY(Text), nullable=True)
+    languages = Column(ARRAY(Text), nullable=True)
     location = Column(String)
     coordinates = Column(JSONB)
     capacity = Column(Integer)
@@ -109,8 +109,8 @@ class MentalHealthResource(Base):
 class Accommodation(Base):
     __tablename__ = "accommodations"
     id = Column(String, primary_key=True, default=generate_uuid_str)
-    created_at = Column(BigInteger, nullable=False, default=current_timestamp_int)
-    updated_at = Column(BigInteger, nullable=False, default=current_timestamp_int, onupdate=current_timestamp_int)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
     township = Column(String, nullable=False)
     name = Column(String, nullable=False)
     has_vacancy = Column(String, nullable=False)
@@ -126,15 +126,15 @@ class Accommodation(Base):
     notes = Column(Text)
     capacity = Column(Integer)
     registration_method = Column(String)
-    facilities = Column(JSONB)
+    facilities = Column(ARRAY(Text), nullable=True)
     distance_to_disaster_area = Column(String)
 
 
 class ShowerStation(Base):
     __tablename__ = "shower_stations"
     id = Column(String, primary_key=True, default=generate_uuid_str)
-    created_at = Column(BigInteger, nullable=False, default=current_timestamp_int)
-    updated_at = Column(BigInteger, nullable=False, default=current_timestamp_int, onupdate=current_timestamp_int)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
     name = Column(String, nullable=False)
     address = Column(String, nullable=False)
     facility_type = Column(String, nullable=False)
@@ -150,7 +150,7 @@ class ShowerStation(Base):
     pricing = Column(String)
     notes = Column(Text)
     info_source = Column(String)
-    facilities = Column(JSONB)
+    facilities = Column(ARRAY(Text), nullable=True)
     distance_to_guangfu = Column(String)
     contact_method = Column(String)
 
@@ -158,8 +158,8 @@ class ShowerStation(Base):
 class WaterRefillStation(Base):
     __tablename__ = "water_refill_stations"
     id = Column(String, primary_key=True, default=generate_uuid_str)
-    created_at = Column(BigInteger, nullable=False, default=current_timestamp_int)
-    updated_at = Column(BigInteger, nullable=False, default=current_timestamp_int, onupdate=current_timestamp_int)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
     name = Column(String, nullable=False)
     address = Column(String, nullable=False)
     water_type = Column(String, nullable=False)
@@ -172,7 +172,7 @@ class WaterRefillStation(Base):
     container_required = Column(String)
     daily_capacity = Column(Integer)
     water_quality = Column(String)
-    facilities = Column(JSONB)
+    facilities = Column(ARRAY(Text), nullable=True)
     distance_to_disaster_area = Column(String)
     notes = Column(Text)
     info_source = Column(String)
@@ -181,8 +181,8 @@ class WaterRefillStation(Base):
 class Restroom(Base):
     __tablename__ = "restrooms"
     id = Column(String, primary_key=True, default=generate_uuid_str)
-    created_at = Column(BigInteger, nullable=False, default=current_timestamp_int)
-    updated_at = Column(BigInteger, nullable=False, default=current_timestamp_int, onupdate=current_timestamp_int)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
     name = Column(String, nullable=False)
     address = Column(String, nullable=False)
     facility_type = Column(String, nullable=False)
@@ -193,13 +193,13 @@ class Restroom(Base):
     status = Column(String, nullable=False)
     coordinates = Column(JSONB)
     phone = Column(String)
-    male_units = Column(Integer)
-    female_units = Column(Integer)
-    unisex_units = Column(Integer)
-    accessible_units = Column(Integer)
+    male_units = Column(DateTime(timezone=True), nullable=False)
+    female_units = Column(DateTime(timezone=True), nullable=False)
+    unisex_units = Column(DateTime(timezone=True), nullable=False)
+    accessible_units = Column(DateTime(timezone=True), nullable=False)
     cleanliness = Column(String)
-    last_cleaned = Column(BigInteger)
-    facilities = Column(JSONB)
+    last_cleaned = Column(DateTime(timezone=True), nullable=False)
+    facilities = Column(ARRAY(Text), nullable=True)
     distance_to_disaster_area = Column(String)
     notes = Column(Text)
     info_source = Column(String)
@@ -208,8 +208,8 @@ class Restroom(Base):
 class HumanResource(Base):
     __tablename__ = "human_resources"
     id = Column(String, primary_key=True, default=generate_uuid_str)
-    created_at = Column(BigInteger, nullable=False, default=current_timestamp_int)
-    updated_at = Column(BigInteger, nullable=False, default=current_timestamp_int, onupdate=current_timestamp_int)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
     org = Column(String, nullable=False)
     address = Column(String, nullable=False)
     phone = Column(String, nullable=False)
@@ -221,13 +221,13 @@ class HumanResource(Base):
     headcount_got = Column(Integer, nullable=False)
     role_status = Column(String, nullable=False)
     has_medical = Column(Boolean)
-    skills = Column(JSONB)
-    certifications = Column(JSONB)
+    skills = Column(ARRAY(Text), nullable=True)
+    certifications = Column(ARRAY(Text), nullable=True)
     experience_level = Column(String, nullable=False)
-    language_requirements = Column(JSONB)
+    language_requirements = Column(ARRAY(Text), nullable=True)
     headcount_unit = Column(String)
-    shift_start_ts = Column(BigInteger)
-    shift_end_ts = Column(BigInteger)
+    shift_start_ts = Column(DateTime(timezone=True), nullable=False)
+    shift_end_ts = Column(DateTime(timezone=True), nullable=False)
     shift_notes = Column(Text)
     assignment_timestamp = Column(BigInteger)
     assignment_count = Column(Integer)
@@ -239,8 +239,8 @@ class HumanResource(Base):
 class Supply(Base):
     __tablename__ = "supplies"
     id = Column(String, primary_key=True, default=generate_uuid_str)
-    created_at = Column(BigInteger, nullable=False, default=current_timestamp_int)
-    updated_at = Column(BigInteger, nullable=False, default=current_timestamp_int, onupdate=current_timestamp_int)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
     name = Column(String)
     address = Column(String)
     phone = Column(String)
@@ -266,14 +266,14 @@ class SupplyItem(Base):
 class Report(Base):
     __tablename__ = "reports"
     id = Column(String, primary_key=True, default=generate_uuid_str)
-    created_at = Column(BigInteger, nullable=False, default=current_timestamp_int)
-    updated_at = Column(BigInteger, nullable=False, default=current_timestamp_int, onupdate=current_timestamp_int)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
     location_id = Column(String, nullable=False)
     name = Column(String, nullable=False)
     location_type = Column(String, nullable=False)
     reason = Column(Text, nullable=False)
     notes = Column(Text)
-    status = Column(Boolean, nullable=False)
+    status = Column(String, nullable=False)
 
 
 class SupplyProvider(Base):
@@ -286,5 +286,5 @@ class SupplyProvider(Base):
     notes = Column(Text)
     provide_count = Column(Integer)
     provide_unit = Column(String)
-    created_at = Column(BigInteger, nullable=False, default=current_timestamp_int)
-    updated_at = Column(BigInteger, nullable=False, default=current_timestamp_int, onupdate=current_timestamp_int)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
