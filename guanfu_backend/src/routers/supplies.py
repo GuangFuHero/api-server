@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List, Literal
 from .. import crud, models, schemas
-from ..crud import get_full_supply
+from ..crud import filter_incomplete_supplies
 from ..database import get_db
 from ..api_key import require_modify_api_key
 
@@ -19,34 +19,39 @@ def list_supplies(
         limit: int = Query(50, ge=1, le=500),
         offset: int = Query(0, ge=0),
         order_by: Optional[Literal["asc", "desc"]] = Query(None, description="時間排序方式：asc 或 desc"),
+        filter_out_complete: Optional[bool] = Query(None, description="是否過濾掉已完成的供應單（received_count == total_count）"),
         db: Session = Depends(get_db)
 ):
     """
     取得供應單清單 (分頁)
-    
+
     - order_by: 指定時間排序方式，可選 "asc" (由舊到新) 或 "desc" (由新到舊)
+    - filterOutComplete: 若為 true，則不回傳已完成的供應單（所有物資項目的 received_count 皆等於 total_count）
     """
-    order_clause = None
+    # 建立基礎查詢
+    query = db.query(models.Supply)
+
+    # 如果需要過濾掉已完成的供應單
+    if filter_out_complete:
+        query = filter_incomplete_supplies(db, query)
+
+    # 應用排序
     if order_by == "asc":
-        order_clause = models.Supply.created_at.asc()
+        query = query.order_by(models.Supply.created_at.asc())
     elif order_by == "desc":
-        order_clause = models.Supply.created_at.desc()
-    
-    supplies = crud.get_multi(
-        db, 
-        model=models.Supply, 
-        skip=offset, 
-        limit=limit, 
-        order_by=order_clause
-    )
-    
+        query = query.order_by(models.Supply.created_at.desc())
+
+    # 計算總數（在同樣的過濾條件下）
+    total = query.count()
+
+    # 應用分頁並執行查詢
+    supplies = query.offset(offset).limit(limit).all()
+
+    # 如果需要加載關聯數據
     if embed == "all":
         supplies = db.query(models.Supply).options(
             joinedload(models.Supply.supplies)
         ).filter(models.Supply.id.in_([s.id for s in supplies])).all()
-    
-    # 使用 crud.count 取得總數
-    total = crud.count(db, model=models.Supply)
 
     return {"member": supplies, "totalItems": total, "limit": limit, "offset": offset}
 
