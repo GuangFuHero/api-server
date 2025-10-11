@@ -738,16 +738,16 @@ class LineTokenResponse(BaseModel):
     """LINE OAuth2 token 交換成功的回應"""
     access_token: str = Field(..., description="存取權杖")
     refresh_token: Optional[str] = Field(None, description="刷新權杖")
-    id_token: str = Field(..., description="ID 權杖 (OpenID Connect)")
+    id_token: Optional[str] = Field(..., description="ID 權杖 (OpenID Connect)")
     token_type: str = Field(default="Bearer", description="權杖類型")
     expires_in: int = Field(..., description="權杖有效期限（秒）")
-    line_user_id: str = Field(..., description="LINE 使用者 ID")
+    line_user_id: Optional[str] = Field(..., description="LINE 使用者 ID")
     
     class Config:
         json_schema_extra = {
             "example": {
                 "access_token": "eyJhbGciOiJIUzI1NiJ9...",
-                "refresh_token": "RPWOpZNN0itBbvWzxN7N",
+                "refresh_token": "RPWOpZNN0itB...",
                 "id_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
                 "token_type": "Bearer",
                 "expires_in": 2592000,
@@ -768,11 +768,11 @@ class LineUserInfoResponse(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "sub": "U1497c257fa61519387b5c6666067fcfe",
-                "name": "顏承恩",
-                "picture": "https://profile.line-scdn.net/0hcW0mc133PHgdFC1txHVCB21EPxI...",
+                "sub": "U1497c257fa61519...",
+                "name": "TEST",
+                "picture": "https://profile.line-scdn.net/0hcW0mc133PHgdFC1txHVC...",
                 "email": None,
                 "email_granted": False,
-                "scope": "profile openid email"
+                "scope": "profile openid"
             }
         }
