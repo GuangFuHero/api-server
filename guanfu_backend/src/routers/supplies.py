@@ -19,7 +19,7 @@ def list_supplies(
         limit: int = Query(50, ge=1, le=500),
         offset: int = Query(0, ge=0),
         order_by: Optional[Literal["asc", "desc"]] = Query(None, description="時間排序方式：asc 或 desc"),
-        filterOutComplete: Optional[bool] = Query(None, description="是否過濾掉已完成的供應單（received_count == total_count）"),
+        filter_out_complete: Optional[bool] = Query(None, description="是否過濾掉已完成的供應單（received_count == total_count）"),
         db: Session = Depends(get_db)
 ):
     """
@@ -32,7 +32,7 @@ def list_supplies(
     query = db.query(models.Supply)
 
     # 如果需要過濾掉已完成的供應單
-    if filterOutComplete:
+    if filter_out_complete:
         query = filter_incomplete_supplies(db, query)
 
     # 應用排序
