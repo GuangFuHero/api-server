@@ -1,6 +1,8 @@
-from pydantic import BaseModel, constr, field_validator, NonNegativeInt
-from typing import List, Optional, Annotated, Any
 from datetime import timezone, datetime, timedelta
+from typing import List, Optional, Annotated
+
+from pydantic import BaseModel, constr, field_validator, NonNegativeInt, Field
+
 from .enum_serializer import *
 
 
@@ -100,6 +102,7 @@ class ShelterBase(BaseModel):
     coordinates: Optional[Coordinates] = None
     opening_hours: Optional[str] = None
 
+
 # Todo:需要協助補上驗證規則 like link
 class ShelterCreate(ShelterBase):
     status: ShelterStatusEnum
@@ -142,9 +145,9 @@ class MedicalStationBase(BaseModel):
     detailed_address: Optional[str] = None
     phone: Optional[str] = None
     contact_person: Optional[str] = None
-    services: Optional[List[str]] = []
+    services: Optional[List[str]] = Field(default_factory=list)
     operating_hours: Optional[str] = None
-    equipment: Optional[List[str]] = []
+    equipment: Optional[Any] = Field(default_factory=list)
     medical_staff: Optional[int] = None
     daily_capacity: Optional[int] = None
     coordinates: Optional[Coordinates] = None
@@ -167,7 +170,7 @@ class MedicalStationPatch(BaseModel):
     contact_person: Optional[str] = None
     services: Optional[List[str]] = None
     operating_hours: Optional[str] = None
-    equipment: Optional[List[str]] = None
+    equipment: Optional[Any] = None
     medical_staff: Optional[int] = None
     daily_capacity: Optional[int] = None
     coordinates: Optional[Coordinates] = None
@@ -274,7 +277,7 @@ class AccommodationCreate(AccommodationBase):
     status: AccommodationStatusEnum
     has_vacancy: AccommodationVacancyEnum
     available_period: Optional[str] = None
-    pricing:Optional[str] = None
+    pricing: Optional[str] = None
 
 
 class AccommodationPatch(BaseModel):
@@ -447,11 +450,12 @@ class RestroomBase(BaseModel):
     unisex_units: Optional[int] = None
     accessible_units: Optional[int] = None
     cleanliness: Optional[str] = None
-    last_cleaned: Optional[int] = None
+    last_cleaned: Optional[datetime] = None
     facilities: Optional[List[str]] = []
     distance_to_disaster_area: Optional[str] = None
     notes: Optional[str] = None
     info_source: Optional[str] = None
+
 
 # Todo:需要協助補上驗證規則 like phone and cleanliness
 class RestroomCreate(RestroomBase):
@@ -513,12 +517,13 @@ class HumanResourceBase(BaseModel):
     experience_level: Optional[str] = None
     language_requirements: Optional[List[str]] = []
     headcount_unit: Optional[str] = None
-    shift_start_ts: Optional[int] = None
-    shift_end_ts: Optional[int] = None
+    shift_start_ts: Optional[datetime] = None
+    shift_end_ts: Optional[datetime] = None
     shift_notes: Optional[str] = None
-    assignment_timestamp: Optional[int] = None
+    assignment_timestamp: Optional[datetime] = None
     assignment_count: Optional[int] = None
     assignment_notes: Optional[str] = None
+
 
 # Todo:需要協助補上驗證規則 like phone
 class HumanResourceCreate(HumanResourceBase):
@@ -597,6 +602,7 @@ class SupplyItemBase(BaseModel):
 
 class SupplyItemCreateWithPin(SupplyItemBase):
     supply_id: str
+    valid_pin: str
 
 
 class SupplyItemCreate(SupplyItemBase):
@@ -696,7 +702,6 @@ class SupplyProviderPatch(BaseModel):
 
 
 class SupplyProvider(SupplyProviderBase, BaseColumn):
-
     class Config:
         from_attributes = True
 
@@ -714,7 +719,7 @@ class ReportBase(BaseModel):
     location_type: str
     location_id: str
     reason: str
-    status: bool
+    status: str
     notes: Optional[str] = None
 
 
@@ -727,7 +732,7 @@ class ReportPatch(BaseModel):
     location_type: Optional[str] = None
     location_id: Optional[str] = None
     reason: Optional[str] = None
-    status: Optional[bool] = None
+    status: Optional[str] = None
     notes: Optional[str] = None
 
 
