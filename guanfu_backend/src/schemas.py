@@ -1,6 +1,6 @@
-from pydantic import BaseModel, constr, Field, NonNegativeInt
+from pydantic import BaseModel, constr, field_validator, NonNegativeInt
 from typing import List, Optional, Annotated, Any
-import datetime
+from datetime import timezone, datetime, timedelta
 from .enum_serializer import *
 
 
@@ -9,6 +9,17 @@ from .enum_serializer import *
 # ===================================================================
 class BaseColumn(BaseModel):
     id: str
+    created_at: Optional[int] = None
+    updated_at: Optional[int] = None
+
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def _coerce_epoch(cls, v):
+        if isinstance(v, datetime):
+            # naive: UTC+8
+            if v.tzinfo is None:
+                v = v.replace(tzinfo=timezone(timedelta(hours=8)))
+        return int(v.timestamp())
 
 
 class Coordinates(BaseModel):
@@ -59,7 +70,7 @@ class VolunteerOrgPatch(BaseModel):
 
 class VolunteerOrganization(VolunteerOrgBase, BaseColumn):
     id: str
-    last_updated: Optional[datetime.datetime] = None
+    last_updated: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -684,8 +695,6 @@ class SupplyProviderPatch(BaseModel):
 
 
 class SupplyProvider(SupplyProviderBase, BaseColumn):
-    created_at: Optional[int] = None
-    updated_at: Optional[int] = None
 
     class Config:
         from_attributes = True
