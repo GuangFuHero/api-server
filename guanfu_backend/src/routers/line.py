@@ -13,11 +13,10 @@ from ..services.line_auth import (
     userinfo_from_id_token,
 )
 
-router = APIRouter(prefix="/oauth2", tags=["OAuth2 (LINE)"])
+router = APIRouter(prefix="/line", tags=["OAuth2 (LINE)"], include_in_schema=False)
 
 
-# --- 授權入口：模仿 /oauth/authorize ---
-@router.get("/authorize",summary="取得LINE 授權入口")
+@router.get("/authorize", summary="取得LINE 授權入口")
 def authorize(
         prompt: Optional[str] = Query(default=None),
         response_mode: Optional[str] = Query(default=None),
@@ -28,7 +27,6 @@ def authorize(
     return RedirectResponse(url)
 
 
-# --- callback 交換 token ---
 @router.get("/callback", summary="依照line授權碼(code)交換token", response_model=LineTokenResponse)
 async def callback(request: Request, db: Session = Depends(get_db)):
     q = dict(request.query_params)
@@ -42,8 +40,7 @@ async def callback(request: Request, db: Session = Depends(get_db)):
     return token_payload
 
 
-# --- 令牌端點（authorization_code、refresh_token）---
-@router.post("/token", response_model=LineTokenResponse , summary="依照refresh_token交換token")
+@router.post("/refresh_token", response_model=LineTokenResponse, summary="依照refresh_token交換token")
 async def token(
         grant_type: str = Form(..., pattern="^(authorization_code|refresh_token)$"),
         code: Optional[str] = Form(default=None),
@@ -54,21 +51,14 @@ async def token(
         if not code:
             raise HTTPException(status_code=400, detail="缺少 code")
         # 這裡無 state（DOT 習慣是在 authorize/callback 完成），若你要合併流程可改為在 body 帶 state
-        raise HTTPException(status_code=400, detail="authorization_code 請使用 /oauth2/callback 完成交換")
+        raise HTTPException(status_code=400, detail="authorization_code 請使用 /line/callback 完成交換")
     elif grant_type == "refresh_token":
         if not refresh_token:
             raise HTTPException(status_code=400, detail="缺少 refresh_token")
         return await exchange_token_refresh(db, refresh_token)
 
 
-# --- 撤銷端點 ---
 @router.post("/revoke", summary="撤銷token")
 async def revoke(access_token: str = Form(...)):
     ok = await revoke_token(access_token)
     return {"revoked": ok}
-
-
-# --- 使用者資訊（模仿 /userinfo）---
-@router.get("/userinfo", response_model=LineUserInfoResponse)
-def userinfo(id_token: str, db: Session = Depends(get_db)):
-    return userinfo_from_id_token(db, id_token)
