@@ -1,96 +1,121 @@
-# 官網基本資訊
+<div align="center">
 
-## 資訊總覽
+# 🏔️ 光復超人 API Server
 
-| 資訊 | 內容 |
-|------|------|
-| Google Sheet 副本 | 光復救災平台用的副本 |
-| 官網連結 | https://sites.google.com/view/guangfu250923/%E7%81%BD%E6%B0%91%E5%8D%94%E5%8A%A9/slennh?authuser=0 |
-| 前端 UI Spec | https://www.figma.com/design/3HmmJtwok42obsXH93s21b/%E8%8A%B1%E8%93%AE%E5%85%89%E5%BE%A9%E5%BE%A9%E5%8E%9F%E4%B9%8B%E8%B7%AF%EF%BC%81?node-id=162-553&t=Fw2L65c6BsMguQRh-0 |
-| 前端技術 | Google Site |
-| 資料庫類型 | PostgreSQL |
-| 資料庫資訊 (host/帳密) | https://github.com/PichuChen/guangfu250923 |
-| 後端 API 框架 | Golang |
-| 後端 API Spec | https://github.com/PichuChen/guangfu250923 |
+### 復原之路，科技相助 🤝
 
-## Alembic Migration 操作步驟
+[![Python](https://img.shields.io/badge/Python-3.13+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Alembic](https://img.shields.io/badge/Alembic-6BA81E?style=for-the-badge&logo=python&logoColor=white)](https://alembic.sqlalchemy.org/)
 
-### 環境準備
+[🌐 官網](https://gf250923.org/map) • [📚 API 文件](https://github.com/GuangFuHero/api-server/blob/main/table_spec.md) • [🎨 UI 設計](https://www.figma.com/design/3HmmJtwok42obsXH93s21b/%E8%8A%B1%E8%93%AE%E5%85%89%E5%BE%A9%E5%BE%A9%E5%8E%9F%E4%B9%8B%E8%B7%AF%EF%BC%81?node-id=162-553&t=Fw2L65c6BsMguQRh-0)
 
-1. 確保已安裝 Python 依賴套件
-2. 設定好資料庫連線環境變數
-3. 進入 `guanfu_backend` 目錄
+</div>
 
-### 基本 Migration 指令
+---
 
-#### 1. 檢查目前 Migration 狀態
+## 📋 目錄
+
+- [專案資訊](#-專案資訊)
+- [技術架構](#-技術架構)
+- [快速開始](#-快速開始)
+- [開發文件](#-開發文件)
+
+---
+
+## 📌 專案資訊
+
+> 提供花蓮光復地區救災相關資訊的後端 API 服務
+
+### 🔗 重要連結
+
+| 項目 | 說明          |                                                                                        連結                                                                                         |
+| :--: | :------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|  🌐  | **官網**      |                                                                      [gf250923.org](https://gf250923.org/map)                                                                       |
+|  🎨  | **UI 設計稿** | [Figma](https://www.figma.com/design/3HmmJtwok42obsXH93s21b/%E8%8A%B1%E8%93%AE%E5%85%89%E5%BE%A9%E5%BE%A9%E5%8E%9F%E4%B9%8B%E8%B7%AF%EF%BC%81?node-id=162-553&t=Fw2L65c6BsMguQRh-0) |
+|  📚  | **API 規格**  |                                                 [table_spec.md](https://github.com/GuangFuHero/api-server/blob/main/table_spec.md)                                                  |
+|  📊  | **資料來源**  |                                                                                  Google Sheet 副本                                                                                  |
+
+---
+
+## 🛠️ 技術架構
+
+<div align="center">
+
+|    技術層    | 使用技術         |
+| :----------: | :--------------- |
+|   **前端**   | Google Site      |
+|   **後端**   | Python + FastAPI |
+|  **資料庫**  | PostgreSQL       |
+|   **ORM**    | SQLAlchemy       |
+| **遷移工具** | Alembic          |
+
+</div>
+
+---
+
+## 🚀 快速開始
+
+### Docker 方式（推薦）
+
 ```bash
 cd guanfu_backend
-alembic current
+
+# 1. 複製環境變數檔案
+cp .env.example .env.dev
+
+# 2. 啟動所有服務（資料庫 + 後端）
+docker compose --env-file .env.dev up -d --build
+
+# 3. 查看 API 文件
+# 訪問 http://localhost:8080/docs
 ```
 
-#### 2. 查看 Migration 歷史
+### 本地開發方式
+
 ```bash
-alembic history --verbose
+cd guanfu_backend
+
+# 1. 安裝 uv 套件管理工具
+brew install uv
+
+# 2. 設定 Python 環境
+uv python install 3.13
+uv sync
+
+# 3. 只啟動資料庫
+docker compose --env-file .env.dev up -d postgres
+
+# 4. 啟動開發伺服器
+uv run uvicorn src.main:app --reload --port 8080
 ```
 
-#### 3. 建立新的 Migration
-```bash
-# 自動偵測模型變更並產生 migration
-alembic revision --autogenerate -m "描述變更內容"
+> 📖 **詳細說明請參考**：[開發環境設定指南](guanfu_backend/docs/getting-started.md)
 
-# 手動建立空的 migration 檔案
-alembic revision -m "描述變更內容"
-```
+---
 
-#### 4. 執行 Migration
-```bash
-# 升級到最新版本
-alembic upgrade head
+## 📚 開發文件
 
-# 升級到特定版本
-alembic upgrade <revision_id>
+| 文件                                                      | 說明                                      |
+| :-------------------------------------------------------- | :---------------------------------------- |
+| 🚀 [開發環境設定](guanfu_backend/docs/getting-started.md) | 從零開始設定開發環境（Docker / 本地開發） |
+| 🔄 [Alembic 遷移指南](docs/alembic.md)                    | 資料庫結構變更與遷移操作                  |
+| 📊 [API 規格](table_spec.md)                              | 完整的 API 端點與資料表規格               |
+| 🔀 [Git Flow 圖示](docs/git-flow-diagram.md)              | 專案的 Git 工作流程                       |
+| 🖥️ [部署指南](DEPLOYMENT.md)                              | 部署到 Compute Engine 的步驟              |
+| 🤝 [貢獻指南](CONTRIBUTING.md)                            | 如何參與專案開發                          |
 
-# 升級一個版本
-alembic upgrade +1
-```
+---
 
-#### 5. 回滾 Migration
-```bash
-# 回滾到上一個版本
-alembic downgrade -1
+## 🙏 致謝
 
-# 回滾到特定版本
-alembic downgrade <revision_id>
+感謝所有參與花蓮光復救災工作的志工與開發者們！
 
-# 回滾到初始狀態
-alembic downgrade base
-```
+---
 
-### 常用操作流程
+<div align="center">
 
-#### 新增資料表或欄位
-1. 修改 `src/models.py` 中的模型定義
-2. 執行 `alembic revision --autogenerate -m "新增資料表/欄位"`
-3. 檢查產生的 migration 檔案是否正確
-4. 執行 `alembic upgrade head`
+Made with ❤️ for 花蓮光復
 
-#### 修改現有欄位
-1. 修改 `src/models.py` 中的模型定義
-2. 執行 `alembic revision --autogenerate -m "修改欄位"`
-3. 檢查並手動調整 migration 檔案（必要時）
-4. 執行 `alembic upgrade head`
-
-#### 刪除欄位或資料表
-1. 修改 `src/models.py` 中的模型定義
-2. 執行 `alembic revision --autogenerate -m "刪除欄位/資料表"`
-3. 檢查產生的 migration 檔案
-4. 執行 `alembic upgrade head`
-
-### 注意事項
-
-- 執行 migration 前務必備份資料庫
-- 檢查自動產生的 migration 檔案，確保符合預期
-- 在生產環境執行前，先在測試環境驗證
-- 如需手動修改 migration 檔案，請謹慎處理
-- 使用 `alembic show <revision_id>` 查看特定 migration 的詳細內容
+</div>
