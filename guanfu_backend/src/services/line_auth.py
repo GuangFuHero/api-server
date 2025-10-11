@@ -2,15 +2,19 @@ import base64
 import hashlib
 import secrets
 import logging
-from datetime import datetime, timedelta
-from typing import Optional, Dict
+from datetime import datetime, timedelta, timezone
+from typing import Optional, Dict, Callable
 
 import httpx
 from urllib.parse import urlencode
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
+from starlette import status
 
 from ..config import settings
+from ..database import get_db
 from ..models import LineUser, LineSessionState
 
 # LINE OAuth2 / OIDC endpoints
@@ -134,7 +138,7 @@ async def exchange_token_authorization_code(db: Session, code: str, state: str) 
         if verify_resp.status_code != 200:
             logger.error(f"ID Token 驗證失敗: {verify_resp.text}")
             raise HTTPException(status_code=400, detail="ID Token 驗證失敗")
-        
+
         decoded = verify_resp.json()
         logger.info(f"ID Token 驗證成功: {decoded}")
 
@@ -229,7 +233,7 @@ async def exchange_token_refresh(db: Session, refresh_token: str) -> Dict:
     user = db.query(LineUser).filter(LineUser.refresh_token == refresh_token).first()
     if not user:
         raise HTTPException(status_code=404, detail="找不到對應的使用者")
-    
+
     user.access_token = access_token
     user.refresh_token = new_refresh_token
     user.token_expires_at = datetime.utcnow() + timedelta(seconds=int(expires_in))
@@ -280,3 +284,81 @@ def userinfo_from_id_token(db: Session, id_token: str) -> Dict:
         "email_granted": user.email_granted,
         "scope": user.scopes,
     }
+
+
+bearer_scheme = HTTPBearer(auto_error=False)
+
+
+def parse_scopes(scopes_text: Optional[str]) -> set[str]:
+    if not scopes_text:
+        return set()
+    parts = [p.strip().lower() for p in scopes_text.replace("\n", " ").split(",")]
+    scopes = set()
+    for part in parts:
+        if not part:
+            continue
+        scopes.update(s.strip() for s in part.split() if s.strip())
+    return scopes
+
+
+def verify_user_token(
+        credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
+        db: Session = Depends(get_db),
+) -> LineUser:
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="缺少 Authorization header",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    if credentials.scheme.lower() != "bearer":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authorization scheme 必須為 Bearer",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    token = credentials.credentials
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="缺少 token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user: Optional[LineUser] = (
+        db.query(LineUser)
+        .filter(or_(LineUser.access_token == token, LineUser.id_token == token))
+        .first()
+    )
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Token 無效或使用者不存在")
+
+    if user.token_expires_at is not None:
+        now = datetime.now(timezone.utc)
+        expires = user.token_expires_at
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=timezone.utc)
+        if now >= expires:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token 已過期",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    return user
+
+
+def require_scopes(*required_scopes: str) -> Callable[[LineUser], LineUser]:
+    required = {s.strip().lower() for s in required_scopes if s.strip()}
+
+    def dependency(user: LineUser = Depends(verify_user_token)) -> LineUser:
+        user_scopes = parse_scopes(user.scopes)
+        missing = required - user_scopes
+        if missing:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"缺少必要權限: {', '.join(sorted(missing))}",
+            )
+        return user
+
+    return dependency
