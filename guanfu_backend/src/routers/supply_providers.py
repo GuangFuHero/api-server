@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from .. import crud, models, schemas
 from ..database import get_db
-from ..api_key import require_modify_api_key
+from ..services.line_auth import verify_user_token
 
 router = APIRouter(
     prefix="/supply_providers",
@@ -39,14 +39,21 @@ def list_supply_providers(
     return {"member": providers, "totalItems": total, "limit": limit, "offset": offset, "next": next_link}
 
 
-@router.post("", response_model=schemas.SupplyProvider, status_code=201, summary="建立物資供應提供者")
+@router.post(
+    "",
+    response_model=schemas.SupplyProvider,
+    status_code=201,
+    summary="建立物資供應提供者",
+    dependencies=[Depends(verify_user_token)],  # 需要 Token 驗證
+)
 def create_supply_provider(
-        provider_in: schemas.SupplyProviderCreate, db: Session = Depends(get_db)
+    provider_in: schemas.SupplyProviderCreate,
+    db: Session = Depends(get_db),
 ):
     """
     建立物資供應提供者
     """
-    # 和go同邏輯
+    # 和 go 同邏輯
     if not crud.get_by_id(db, models.SupplyItem, provider_in.supply_item_id):
         raise HTTPException(status_code=404, detail="Supply Item not found")
 
@@ -54,14 +61,16 @@ def create_supply_provider(
 
 
 @router.patch(
-        "/{id}",
-        response_model=schemas.SupplyProvider,
-        status_code=200,
-        summary="更新特定物資供應提供者",
-        dependencies=[Security(require_modify_api_key)],
+    "/{id}",
+    response_model=schemas.SupplyProvider,
+    status_code=200,
+    summary="更新特定物資供應提供者",
+    dependencies=[Depends(verify_user_token)],  # 需要 Token 驗證
 )
 def patch_supply_provider(
-        id: str, provider_in: schemas.SupplyProviderPatch, db: Session = Depends(get_db)
+    id: str,
+    provider_in: schemas.SupplyProviderPatch,
+    db: Session = Depends(get_db),
 ):
     """
     更新物資供應提供者 (部分欄位)

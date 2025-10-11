@@ -1,6 +1,12 @@
 #!/bin/bash
 # Auto-generate .env file from environment variables
-# Usage: ENVIRONMENT=dev DB_PASS=xxx API_KEY=xxx ./setup-env.sh
+# Usage:
+#   ENVIRONMENT=dev DB_PASS=xxx API_KEY_LIST=key1,key2 \
+#   LINE_CLIENT_ID=your_line_client_id \
+#   LINE_CLIENT_SECRET=your_line_client_secret \
+#   ./setup-env.sh
+#
+# Note: LINE_REDIRECT_URI 會根據 ENVIRONMENT 自動生成，通常不需要手動設定
 
 set -e
 
@@ -8,6 +14,22 @@ set -e
 ENVIRONMENT=${ENVIRONMENT:-prod}
 DB_PASS=${DB_PASS:?ERROR: DB_PASS is required}
 API_KEY_LIST=${API_KEY_LIST:-}
+
+# Line Login parameters
+LINE_CLIENT_ID=${LINE_CLIENT_ID:-""}
+LINE_CLIENT_SECRET=${LINE_CLIENT_SECRET:-""}
+
+# LINE_REDIRECT_URI 根據環境自動生成（不是 secret，可以公開）
+# 可透過環境變數覆寫以支援特殊情況
+if [ -z "$LINE_REDIRECT_URI" ]; then
+  if [ "$ENVIRONMENT" = "prod" ]; then
+    LINE_REDIRECT_URI="https://api.gf250923.org/line/callback"
+  elif [ "$ENVIRONMENT" = "dev" ]; then
+    LINE_REDIRECT_URI="https://uat-api.gf250923.org/line/callback"
+  else
+    LINE_REDIRECT_URI="http://localhost:8080/line/callback"
+  fi
+fi
 
 # Database settings
 DB_USER="guangfu"
@@ -55,6 +77,14 @@ DB_NAME=${DB_NAME}
 
 # Database connection URL (auto-generated)
 DATABASE_URL=${DATABASE_URL}
+
+# ----------------------------------------------------------------------------
+# LINE Login Settings
+# ----------------------------------------------------------------------------
+# LINE_REDIRECT_URI is auto-generated based on ENVIRONMENT
+LINE_CLIENT_ID=${LINE_CLIENT_ID}
+LINE_CLIENT_SECRET=${LINE_CLIENT_SECRET}
+LINE_REDIRECT_URI=${LINE_REDIRECT_URI}
 EOF
 
 # Verify .env file was created

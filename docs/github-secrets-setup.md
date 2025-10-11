@@ -27,6 +27,8 @@
 | `DEPLOY_SSH_KEY`            | 開發環境部署用的 SSH 私鑰            | `-----BEGIN OPENSSH PRIVATE KEY-----\n...` |
 | `POSTGRES_PASSWORD`         | PostgreSQL 資料庫密碼                | `dev_db_password_2024`                     |
 | `ALLOW_MODIFY_API_KEY_LIST` | 允許修改資料的 API Keys（逗號分隔）  | `dev_key_1,dev_key_2`                      |
+| `LINE_CLIENT_ID`            | LINE Login Channel ID（開發環境）    | `1234567890`                               |
+| `LINE_CLIENT_SECRET`        | LINE Login Channel Secret（開發環境）| `abcdef1234567890abcdef1234567890`         |
 
 #### 生產環境 (production)
 
@@ -38,6 +40,8 @@
 | `DEPLOY_SSH_KEY`            | 生產環境部署用的 SSH 私鑰            | `-----BEGIN OPENSSH PRIVATE KEY-----\n...` |
 | `POSTGRES_PASSWORD`         | PostgreSQL 資料庫密碼                | `prod_strong_password_2024`                |
 | `ALLOW_MODIFY_API_KEY_LIST` | 允許修改資料的 API Keys（逗號分隔）  | `prod_key_1,prod_key_2,prod_key_3`         |
+| `LINE_CLIENT_ID`            | LINE Login Channel ID（生產環境）    | `9876543210`                               |
+| `LINE_CLIENT_SECRET`        | LINE Login Channel Secret（生產環境）| `fedcba0987654321fedcba0987654321`         |
 
 ## 設定步驟
 
@@ -104,9 +108,51 @@ cat ~/.ssh/guangfu_deploy_prod.pub
 3. 編輯 authorized_keys：`nano ~/.ssh/authorized_keys`
 4. 將生產環境公鑰內容貼上並儲存
 
+## 取得 LINE Login 憑證
+
+建議為開發和生產環境分別建立不同的 LINE Login channel，以便獨立管理和測試。
+
+### 建立 LINE Login Channel
+
+1. 前往 [LINE Developers Console](https://developers.line.biz/)
+2. 使用 LINE 帳號登入
+3. 如果沒有 Provider，點選 **Create** 建立新的 Provider
+   - Provider name：例如「花蓮光復救災平台」
+4. 在 Provider 頁面點選 **Create a LINE Login channel**
+
+### 開發環境設定
+
+1. 建立開發環境 channel：
+   - Channel name：例如「光復救災平台 - Dev」
+   - Channel description：開發環境用途說明
+   - App types：Web app
+2. 在 **Basic settings** 頁籤：
+   - 複製 **Channel ID** → 設定到 GitHub Secrets 的 `LINE_CLIENT_ID`（dev 環境）
+   - 複製 **Channel secret** → 設定到 GitHub Secrets 的 `LINE_CLIENT_SECRET`（dev 環境）
+3. 在 **LINE Login** 頁籤：
+   - Callback URL：新增 `https://uat-api.gf250923.org/line/callback`
+
+### 生產環境設定
+
+1. 建立生產環境 channel（重複上述步驟）：
+   - Channel name：例如「光復救災平台 - Production」
+   - Channel description：生產環境用途說明
+   - App types：Web app
+2. 在 **Basic settings** 頁籤：
+   - 複製 **Channel ID** → 設定到 GitHub Secrets 的 `LINE_CLIENT_ID`（production 環境）
+   - 複製 **Channel secret** → 設定到 GitHub Secrets 的 `LINE_CLIENT_SECRET`（production 環境）
+3. 在 **LINE Login** 頁籤：
+   - Callback URL：新增 `https://api.gf250923.org/line/callback`
+
+### 重要提醒
+
+- **Channel secret 只會顯示一次**，請務必妥善保存
+- 如果遺失 Channel secret，需要在 LINE Developers Console 重新發行
+- Callback URL 必須與 `setup-env.sh` 自動生成的 `LINE_REDIRECT_URI` 完全一致
+
 ## 非敏感設定值
 
-以下設定值不需要放在 Secrets 中，已直接寫在 `.github/workflows/cicd.yaml` 中：
+以下設定值不需要放在 Secrets 中，已直接寫在 `.github/workflows/cicd.yaml` 或 `setup-env.sh` 中：
 
 - `ENVIRONMENT`：根據部署分支自動設定（dev/prod）
 - `APP_TITLE`：固定為「花蓮光復救災平台 API」
@@ -116,8 +162,11 @@ cat ~/.ssh/guangfu_deploy_prod.pub
 - `PROD_SERVER_URL`：固定為 https://api.gf250923.org
 - `DEV_SERVER_URL`：固定為 https://uat-api.gf250923.org
 - `DATABASE_URL`：自動組合（格式：`postgresql://{DB_USER}:{POSTGRES_PASSWORD}@postgres:5432/{DB_NAME}`）
+- `LINE_REDIRECT_URI`：根據環境自動生成
+  - 生產環境：`https://api.gf250923.org/line/callback`
+  - 開發環境：`https://uat-api.gf250923.org/line/callback`
 
-如需修改這些值，請直接編輯 `.github/workflows/cicd.yaml` 檔案。
+如需修改這些值，請直接編輯 `.github/workflows/cicd.yaml` 或 `setup-env.sh` 檔案。
 
 ### 為什麼 DATABASE_URL 不需要設定為 Secret？
 
@@ -180,7 +229,22 @@ postgresql://{DB_USER}:{POSTGRES_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}
 4. 檢查資料庫 logs：`docker compose logs postgres`
 5. 確認資料庫 host (`postgres`) 在 Docker 網路中可連線
 
+### 問題：LINE Login 無法使用
+
+**解決方法：**
+
+1. 確認 `LINE_CLIENT_ID` 和 `LINE_CLIENT_SECRET` 設定正確
+2. 檢查 LINE Developers Console 中的 Callback URL 是否正確：
+   - 開發環境：`https://uat-api.gf250923.org/line/callback`
+   - 生產環境：`https://api.gf250923.org/line/callback`
+3. 確認 LINE Login channel 狀態為「Published」
+4. 檢查應用程式日誌中是否有 LINE API 相關錯誤訊息
+5. 驗證 `LINE_REDIRECT_URI` 環境變數是否正確生成：
+   - 在 VM 上執行：`docker compose exec backend env | grep LINE`
+
 ## 相關文件
 
 - [GitHub Secrets 官方文件](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
 - [GitHub Environments 官方文件](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment)
+- [LINE Login 官方文件](https://developers.line.biz/en/docs/line-login/)
+- [LINE Developers Console](https://developers.line.biz/)
