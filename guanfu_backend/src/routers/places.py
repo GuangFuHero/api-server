@@ -36,7 +36,13 @@ def list_places(
     return {"member": places, "totalItems": total, "limit": limit, "offset": offset, "next": next_link}
 
 
-@router.post("", response_model=schemas.Place, status_code=201, summary="建立場所")
+@router.post(
+    "",
+    response_model=schemas.Place,
+    status_code=201,
+    summary="建立場所",
+    dependencies=[Security(require_modify_api_key)],
+)
 def create_place(
         place_in: schemas.PlaceCreate, db: Session = Depends(get_db)
 ):
@@ -51,6 +57,8 @@ def create_place(
     - status: 狀態
     - contact_name: 聯絡人姓名
     - contact_phone: 聯絡電話
+
+    需要 API Key 權限
     """
     return crud.create(db, models.Place, obj_in=place_in)
 
