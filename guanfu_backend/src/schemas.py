@@ -743,3 +743,72 @@ class Report(ReportBase, BaseColumn):
 
 class ReportCollection(CollectionBase):
     member: List[Report]
+
+
+# ===================================================================
+# 地點/場所 (Places)
+# ===================================================================
+
+class PlaceBase(BaseModel):
+    """Base schema for Place with all common fields."""
+    name: str
+    address: str
+    address_description: Optional[str] = None
+    coordinates: dict  # JSONB: {lat: float, lng: float}
+    type: str
+    sub_type: Optional[str] = None
+    info_sources: Optional[List[str]] = Field(default_factory=list)
+    verified_at: Optional[int] = None  # Unix timestamp
+    website_url: Optional[str] = None
+    status: str
+    resources: Optional[List[dict]] = Field(default_factory=list)  # JSONB array
+    open_date: Optional[str] = None
+    end_date: Optional[str] = None
+    open_time: Optional[str] = None
+    end_time: Optional[str] = None
+    contact_name: str
+    contact_phone: str
+    notes: Optional[str] = None
+    tags: Optional[List[dict]] = Field(default_factory=list)  # JSONB array
+    additional_info: Optional[dict] = None  # JSONB object
+
+
+class PlaceCreate(PlaceBase):
+    """Schema for creating a new place."""
+    type: PlaceTypeEnum
+    status: PlaceStatusEnum
+
+
+class PlacePatch(BaseModel):
+    """Schema for partially updating a place."""
+    name: Optional[str] = None
+    address: Optional[str] = None
+    address_description: Optional[str] = None
+    coordinates: Optional[dict] = None
+    type: Optional[PlaceTypeEnum] = None
+    sub_type: Optional[str] = None
+    info_sources: Optional[List[str]] = None
+    verified_at: Optional[int] = None
+    website_url: Optional[str] = None
+    status: Optional[PlaceStatusEnum] = None
+    resources: Optional[List[dict]] = None
+    open_date: Optional[str] = None
+    end_date: Optional[str] = None
+    open_time: Optional[str] = None
+    end_time: Optional[str] = None
+    contact_name: Optional[str] = None
+    contact_phone: Optional[str] = None
+    notes: Optional[str] = None
+    tags: Optional[List[dict]] = None
+    additional_info: Optional[dict] = None
+
+
+class Place(PlaceBase, BaseColumn):
+    """Schema for Place response."""
+    class Config:
+        from_attributes = True
+
+
+class PlaceCollection(CollectionBase):
+    """Schema for paginated Place collection."""
+    member: List[Place]

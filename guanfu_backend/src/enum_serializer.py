@@ -179,3 +179,26 @@ class ReportStatusEnum(enum.Enum):
     # 規格為字串 'true' / 'false'（非布林）
     true = "true"
     false = "false"
+
+
+class PlaceTypeEnum(enum.Enum):
+    """Place types for disaster relief locations."""
+    shelter = "shelter"
+    medical = "medical"
+    resource_center = "resource_center"
+    supply_point = "supply_point"
+    information_center = "information_center"
+    emergency_service = "emergency_service"
+    volunteer_center = "volunteer_center"
+    temporary_housing = "temporary_housing"
+    other = "other"
+
+
+class PlaceStatusEnum(enum.Enum):
+    """Status values for places."""
+    open = "open"
+    closed = "closed"
+    temporarily_closed = "temporarily_closed"
+    full = "full"
+    limited_capacity = "limited_capacity"
+    emergency_only = "emergency_only"

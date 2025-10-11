@@ -288,3 +288,52 @@ class SupplyProvider(Base):
     provide_unit = Column(String)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+
+
+class Place(Base):
+    """
+    Place model for disaster relief locations (shelters, medical centers, resource centers, etc.)
+    Corresponds to the Golang 'places' table with comprehensive location and resource information.
+    """
+    __tablename__ = "places"
+    id = Column(String, primary_key=True, default=generate_uuid_str)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+
+    # Basic Information
+    name = Column(String, nullable=False)
+    address = Column(String, nullable=False)
+    address_description = Column(String)
+
+    # Location
+    coordinates = Column(JSONB, nullable=False)  # {lat: float, lng: float}
+
+    # Classification
+    type = Column(String, nullable=False)  # e.g., "shelter", "medical", "resource_center"
+    sub_type = Column(String)
+
+    # Verification & Information Sources
+    info_sources = Column(ARRAY(Text), nullable=True)  # Array of source URLs/names
+    verified_at = Column(BigInteger)  # Unix timestamp
+    website_url = Column(String)
+
+    # Status
+    status = Column(String, nullable=False)  # e.g., "open", "closed", "temporarily_closed"
+
+    # Resources & Tags
+    resources = Column(JSONB)  # Array of resource objects
+    tags = Column(JSONB)  # Array of tag objects
+    additional_info = Column(JSONB)  # Flexible additional information
+
+    # Schedule
+    open_date = Column(String)
+    end_date = Column(String)
+    open_time = Column(String)
+    end_time = Column(String)
+
+    # Contact Information
+    contact_name = Column(String, nullable=False)
+    contact_phone = Column(String, nullable=False)
+
+    # Notes
+    notes = Column(Text)
