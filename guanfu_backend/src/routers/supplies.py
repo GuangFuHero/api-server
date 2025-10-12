@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Security, Request
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List, Literal
 from .. import crud, models, schemas
-from ..crud import get_full_supply
+from ..crud import get_full_supply, supply_merge_item_counts, supply_batch_increment_received
 from ..database import get_db
 from ..api_key import require_modify_api_key
 
@@ -97,3 +97,18 @@ def get_supply(id: str, db: Session = Depends(get_db)):
     if db_supply is None:
         raise HTTPException(status_code=404, detail="Supply not found")
     return db_supply
+
+
+@router.post("/{id}", response_model=schemas.Supply)
+def update_supply(
+        id: str,
+        supply_item_in: List[schemas.SupplyItemUpdate],
+        db: Session = Depends(get_db),
+):
+    """
+    將 payload.data 中的各項目依據 id 對應到 supply_item，
+    執行 received_count += count 的批次更新，並回傳更新後的 Supply。
+    """
+    merged = supply_merge_item_counts([item.model_dump() for item in supply_item_in])
+    updated_supply = supply_batch_increment_received(db, id, merged)
+    return updated_supply
