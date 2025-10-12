@@ -32,20 +32,20 @@ def list_supplies(
         order_clause = models.Supply.created_at.asc()
     elif order_by == "desc":
         order_clause = models.Supply.created_at.desc()
-    
+
     supplies = crud.get_multi(
-        db, 
-        model=models.Supply, 
-        skip=offset, 
-        limit=limit, 
+        db,
+        model=models.Supply,
+        skip=offset,
+        limit=limit,
         order_by=order_clause
     )
-    
+
     if embed == "all":
         supplies = db.query(models.Supply).options(
             joinedload(models.Supply.supplies)
         ).filter(models.Supply.id.in_([s.id for s in supplies])).all()
-    
+
     # 使用 crud.count 取得總數
     total = crud.count(db, model=models.Supply)
     next_link = crud.build_next_link(request, limit=limit, offset=offset, total=total)
@@ -69,7 +69,7 @@ def create_supply(
     response_model=schemas.Supply,
     status_code=200,
     summary="更新供應單",
-    dependencies=[Security(require_modify_api_key)],
+    # dependencies=[Security(require_modify_api_key)],
 )
 def patch_supply(
         id: str, supply_in: schemas.SupplyPatch, db: Session = Depends(get_db)
@@ -82,8 +82,8 @@ def patch_supply(
         raise HTTPException(status_code=400, detail="Completed supply orders cannot be edited.")
 
     # PIN 檢核
-    if db_supply.valid_pin and db_supply.valid_pin != supply_in.valid_pin:
-        raise HTTPException(status_code=400, detail="The PIN you entered is incorrect.")
+    # if db_supply.valid_pin and db_supply.valid_pin != supply_in.valid_pin:
+    #     raise HTTPException(status_code=400, detail="The PIN you entered is incorrect.")
 
     return crud.update(db, db_obj=db_supply, obj_in=supply_in)
 
