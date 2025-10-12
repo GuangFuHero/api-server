@@ -3,12 +3,14 @@ from urllib.parse import urlencode
 
 from fastapi import HTTPException, Request
 from pydantic import BaseModel
-from sqlalchemy import exists, and_
+from sqlalchemy import exists, and_, select
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.inspection import inspect as sa_inspect
+from starlette import status
 
 from . import models
+from .models import Supply, SupplyItem
 from .schemas import SupplyCreate, SupplyItemDistribution
 from .pin_related import generate_pin
 from .enum_serializer import *
@@ -275,3 +277,98 @@ def is_completed_supply(supply: models.Supply) -> bool:
         if item.total_number != item.received_count:
             is_compelete = False
     return is_compelete
+
+
+def supply_merge_item_counts(data: List[Dict[str, int]]) -> Dict[str, int]:
+    """將輸入的 JSON 陣列合併成 {supply_item_id: total_count}"""
+    merged = {}
+    for entry in data:
+        # 結構化寫法：直接逐一檢查欄位後賦值
+        if "id" not in entry or "count" not in entry:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="每個項目必須包含 id 與 count 欄位"
+            )
+        item_id = entry["id"]
+        count = entry["count"]
+        if not isinstance(count, int) or count <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"item {item_id} 的 count 必須為正整數且大於 0"
+            )
+        if item_id in merged:
+            merged[item_id] = merged[item_id] + count
+        else:
+            merged[item_id] = count
+
+    if len(merged) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="沒有可更新的項目"
+        )
+    return merged
+
+
+def supply_batch_increment_received(db: Session, supply_id: str, item_counts: Dict[str, int]) -> Supply:
+    """對指定 supply 的項目批次累加 received_count，並回傳更新後的 Supply"""
+    # 取得 supply
+    supply = db.scalar(select(Supply).where(Supply.id == supply_id))
+    if supply is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Supply {supply_id} 不存在"
+        )
+
+    # 檢查要更新的項目 id 列表
+    item_ids = list(item_counts.keys())
+    if len(item_ids) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="沒有可更新的項目"
+        )
+
+    # 查詢該供應單底下的 items
+    items = list(
+        db.scalars(
+            select(SupplyItem).where(
+                SupplyItem.id.in_(item_ids),
+                SupplyItem.supply_id == supply_id
+            )
+        )
+    )
+
+    # 驗證缺漏
+    found_ids = set()
+    for it in items:
+        found_ids.add(it.id)
+    missing_ids = []
+    for iid in item_ids:
+        if iid not in found_ids:
+            missing_ids.append(iid)
+    if len(missing_ids) > 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"以下 supply_item_id 未找到或不屬於 Supply {supply_id}: {missing_ids}"
+        )
+
+    # 交易更新（保持簡潔結構）
+    try:
+        for it in items:
+            inc = item_counts[it.id]
+            current = it.received_count if it.received_count is not None else 0
+            it.received_count = current + inc
+
+        db.add_all(items)
+        db.flush()
+        db.refresh(supply)
+        db.commit()
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="批次更新失敗，請稍後重試"
+        )
+    return supply

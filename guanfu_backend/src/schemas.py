@@ -1,7 +1,7 @@
 from datetime import timezone, datetime, timedelta
 from typing import List, Optional, Annotated
 
-from pydantic import BaseModel, constr, field_validator, NonNegativeInt, Field
+from pydantic import BaseModel, constr, field_validator, NonNegativeInt, Field, conint
 
 from .enum_serializer import *
 
@@ -51,7 +51,7 @@ class VolunteerOrgBase(BaseModel):
     service_content: Optional[str] = None
     meeting_info: Optional[str] = None
     notes: Optional[str] = None
-    image_url: Optional[str] = None # Todo:需要協助補上驗證規則
+    image_url: Optional[str] = None  # Todo:需要協助補上驗證規則
 
 
 class VolunteerOrgCreate(VolunteerOrgBase):
@@ -68,7 +68,7 @@ class VolunteerOrgPatch(BaseModel):
     service_content: Optional[str] = None
     meeting_info: Optional[str] = None
     notes: Optional[str] = None
-    image_url: Optional[str] = None # Todo:需要協助補上驗證規則
+    image_url: Optional[str] = None  # Todo:需要協助補上驗證規則
 
 
 class VolunteerOrganization(VolunteerOrgBase, BaseColumn):
@@ -154,6 +154,7 @@ class MedicalStationBase(BaseModel):
     affiliated_organization: Optional[str] = None
     notes: Optional[str] = None
     link: Optional[str] = None
+
 
 # Todo:需要協助補上驗證規則 like phone and link
 class MedicalStationCreate(MedicalStationBase):
@@ -317,6 +318,7 @@ class GenderSchedule(BaseModel):
     male: Optional[List[str]] = []
     female: Optional[List[str]] = []
 
+
 # Todo:需要協助補上驗證規則 like phone
 class ShowerStationBase(BaseModel):
     name: str
@@ -395,6 +397,7 @@ class WaterRefillStationBase(BaseModel):
     distance_to_disaster_area: Optional[str] = None
     notes: Optional[str] = None
     info_source: Optional[str] = None
+
 
 # Todo:需要協助補上驗證規則 like phone
 class WaterRefillStationCreate(WaterRefillStationBase):
@@ -671,6 +674,11 @@ SixDigitPin = Annotated[str, constr(pattern=r'^\d{6}$')]
 class SupplyItemDistribution(BaseModel):
     id: str
     valid_pin: SixDigitPin
+
+
+class SupplyItemUpdate(BaseModel):
+    id: str = Field(..., description="supply_item_id")
+    count: conint(strict=True, gt=0) = Field(..., description="要累加的數量，必須為正整數")
 
 
 # ===================================================================
