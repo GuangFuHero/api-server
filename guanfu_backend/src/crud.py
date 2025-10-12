@@ -1,5 +1,6 @@
 from typing import List, Optional, Type, TypeVar
 from urllib.parse import urlencode
+from datetime import datetime, timezone
 
 from fastapi import HTTPException, Request
 from pydantic import BaseModel
@@ -123,6 +124,9 @@ def update(db: Session, db_obj: ModelType, obj_in: UpdateSchemaType) -> ModelTyp
     - 但仍需避免 Enum 直接進 DB，故在這裡統一轉字串。
     """
     update_data = normalize_payload_dict(obj_in.model_dump(exclude_unset=True))
+    # update time
+    if "updated_at" in db_obj.__table__.c:
+        setattr(db_obj, "updated_at", datetime.now(timezone.utc))
     for field, value in update_data.items():
         setattr(db_obj, field, value)
     db.add(db_obj)
