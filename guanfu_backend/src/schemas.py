@@ -933,12 +933,12 @@ class PlaceResource(BaseModel):
     """站點資源資料"""
 
     name: str = Field(..., description="資源名稱，例如：女廁")
-    count: int = Field(..., description="數量，例如：10")
+    amount: int = Field(..., description="數量，例如：10")
     unit: str = Field(..., description="單位，例如：座")
 
     class Config:
         json_schema_extra = {
-            "example": {"name": "測試資源名稱", "count": 10, "unit": "個"}
+            "example": {"name": "測試資源名稱", "amount": 10, "unit": "個"}
         }
 
 
@@ -1029,8 +1029,8 @@ class PlaceCreate(PlaceBase):
                 "website_url": "https://example.com/test-hospital",
                 "status": "開放",
                 "resources": [
-                    {"name": "測試資源A", "count": 5, "unit": "個"},
-                    {"name": "測試資源B", "count": 10, "unit": "件"},
+                    {"name": "測試資源A", "amount": 5, "unit": "個"},
+                    {"name": "測試資源B", "amount": 10, "unit": "件"},
                 ],
                 "open_date": "2025/09/30",
                 "end_date": "2025/10/12",
