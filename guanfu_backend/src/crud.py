@@ -362,7 +362,11 @@ def supply_batch_increment_received(db: Session, supply_id: str, item_counts: Di
             current = it.received_count if it.received_count is not None else 0
             it.received_count = current + inc
 
+        # 更新父層 Supply 的 updated_at
+        supply.updated_at = datetime.now(timezone.utc)
+
         db.add_all(items)
+        db.add(supply)
         db.flush()
         db.refresh(supply)
         db.commit()
