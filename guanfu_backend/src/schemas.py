@@ -1,7 +1,7 @@
 from datetime import timezone, datetime, timedelta
-from typing import List, Optional, Annotated
+from typing import List, Optional, Annotated, Union, Literal, Tuple
 
-from pydantic import BaseModel, constr, field_validator, NonNegativeInt, Field
+from pydantic import BaseModel, constr, field_validator, NonNegativeInt, Field, conint
 
 from .enum_serializer import *
 
@@ -41,6 +41,7 @@ class CollectionBase(BaseModel):
 # 志工團體 (Volunteer Organizations)
 # ===================================================================
 
+
 class VolunteerOrgBase(BaseModel):
     organization_name: str
     registration_status: Optional[str] = None
@@ -51,7 +52,7 @@ class VolunteerOrgBase(BaseModel):
     service_content: Optional[str] = None
     meeting_info: Optional[str] = None
     notes: Optional[str] = None
-    image_url: Optional[str] = None # Todo:需要協助補上驗證規則
+    image_url: Optional[str] = None  # Todo:需要協助補上驗證規則
 
 
 class VolunteerOrgCreate(VolunteerOrgBase):
@@ -68,7 +69,7 @@ class VolunteerOrgPatch(BaseModel):
     service_content: Optional[str] = None
     meeting_info: Optional[str] = None
     notes: Optional[str] = None
-    image_url: Optional[str] = None # Todo:需要協助補上驗證規則
+    image_url: Optional[str] = None  # Todo:需要協助補上驗證規則
 
 
 class VolunteerOrganization(VolunteerOrgBase, BaseColumn):
@@ -86,6 +87,7 @@ class VolunteerOrgCollection(CollectionBase):
 # ===================================================================
 # 庇護所 (Shelters)
 # ===================================================================
+
 
 class ShelterBase(BaseModel):
     name: str
@@ -137,6 +139,7 @@ class ShelterCollection(CollectionBase):
 # 醫療站 (Medical Stations)
 # ===================================================================
 
+
 class MedicalStationBase(BaseModel):
     station_type: MedicalStationTypeEnum
     name: str
@@ -154,6 +157,7 @@ class MedicalStationBase(BaseModel):
     affiliated_organization: Optional[str] = None
     notes: Optional[str] = None
     link: Optional[str] = None
+
 
 # Todo:需要協助補上驗證規則 like phone and link
 class MedicalStationCreate(MedicalStationBase):
@@ -191,6 +195,7 @@ class MedicalStationCollection(CollectionBase):
 # ===================================================================
 # 心理健康資源 (Mental Health Resources)
 # ===================================================================
+
 
 class MentalHealthResourceBase(BaseModel):
     duration_type: str
@@ -253,6 +258,7 @@ class MentalHealthResourceCollection(CollectionBase):
 # 住宿資源 (Accommodations)
 # ===================================================================
 
+
 class AccommodationBase(BaseModel):
     township: str
     name: str
@@ -313,9 +319,11 @@ class AccommodationCollection(CollectionBase):
 # 洗澡點 (Shower Stations)
 # ===================================================================
 
+
 class GenderSchedule(BaseModel):
     male: Optional[List[str]] = []
     female: Optional[List[str]] = []
+
 
 # Todo:需要協助補上驗證規則 like phone
 class ShowerStationBase(BaseModel):
@@ -378,6 +386,7 @@ class ShowerStationCollection(CollectionBase):
 # 飲用水補給站 (Water Refill Stations)
 # ===================================================================
 
+
 class WaterRefillStationBase(BaseModel):
     name: str
     address: str
@@ -395,6 +404,7 @@ class WaterRefillStationBase(BaseModel):
     distance_to_disaster_area: Optional[str] = None
     notes: Optional[str] = None
     info_source: Optional[str] = None
+
 
 # Todo:需要協助補上驗證規則 like phone
 class WaterRefillStationCreate(WaterRefillStationBase):
@@ -433,6 +443,7 @@ class WaterRefillStationCollection(CollectionBase):
 # ===================================================================
 # 廁所 (Restrooms)
 # ===================================================================
+
 
 class RestroomBase(BaseModel):
     name: str
@@ -592,6 +603,7 @@ class HumanResourceCollection(CollectionBase):
 # 物資項目 (Supply Items) & 物資單 (Supplies)
 # ===================================================================
 
+
 class SupplyItemBase(BaseModel):
     total_number: NonNegativeInt
     tag: Optional[str] = None
@@ -665,7 +677,7 @@ class SupplyCollection(CollectionBase):
     member: List[Supply]
 
 
-SixDigitPin = Annotated[str, constr(pattern=r'^\d{6}$')]
+SixDigitPin = Annotated[str, constr(pattern=r"^\d{6}$")]
 
 
 class SupplyItemDistribution(BaseModel):
@@ -673,9 +685,17 @@ class SupplyItemDistribution(BaseModel):
     valid_pin: SixDigitPin
 
 
+class SupplyItemUpdate(BaseModel):
+    id: str = Field(..., description="supply_item_id")
+    count: conint(strict=True, gt=0) = Field(
+        ..., description="要累加的數量，必須為正整數"
+    )
+
+
 # ===================================================================
 # 物資供應提供者 (Supply Providers)
 # ===================================================================
+
 
 class SupplyProviderBase(BaseModel):
     name: str
@@ -714,6 +734,7 @@ class SupplyProviderCollection(CollectionBase):
 # 回報事件 (Reports)
 # ===================================================================
 
+
 class ReportBase(BaseModel):
     name: str
     location_type: str
@@ -746,49 +767,275 @@ class ReportCollection(CollectionBase):
 
 
 # ===================================================================
+# LINE OAuth2 認證 (LINE OAuth2 Authentication)
+# ===================================================================
+
+
+class LineTokenResponse(BaseModel):
+    """LINE OAuth2 token 交換成功的回應"""
+
+    access_token: str = Field(..., description="存取權杖")
+    refresh_token: Optional[str] = Field(None, description="刷新權杖")
+    id_token: Optional[str] = Field(..., description="ID 權杖 (OpenID Connect)")
+    token_type: str = Field(default="Bearer", description="權杖類型")
+    expires_in: int = Field(..., description="權杖有效期限（秒）")
+    line_user_id: Optional[str] = Field(..., description="LINE 使用者 ID")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "access_token": "eyJhbGciOiJIUzI1NiJ9...",
+                "refresh_token": "RPWOpZNN0itB...",
+                "id_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+                "token_type": "Bearer",
+                "expires_in": 2592000,
+                "line_user_id": "U1497c257fa61519387b5c6666067fcfe",
+            }
+        }
+
+
+class LineUserInfoResponse(BaseModel):
+    """LINE 使用者資訊回應"""
+
+    sub: str = Field(..., description="LINE 使用者 ID (subject)")
+    name: Optional[str] = Field(None, description="使用者顯示名稱")
+    picture: Optional[str] = Field(None, description="使用者頭像 URL")
+    email: Optional[str] = Field(None, description="使用者電子郵件")
+    email_granted: bool = Field(default=False, description="是否授予電子郵件權限")
+    scope: str = Field(..., description="授權範圍")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "sub": "U1497c257fa61519...",
+                "name": "TEST",
+                "picture": "https://profile.line-scdn.net/0hcW0mc133PHgdFC1txHVC...",
+                "email": None,
+                "email_granted": False,
+                "scope": "profile openid",
+            }
+        }
+
+
+# ===================================================================
 # 場所 (Places)
 # ===================================================================
 
+
+class PointCoordinates(BaseModel):
+    """Point 類型座標 - 單一明確位置點"""
+
+    type: Literal["Point"] = Field(
+        "Point", description="座標類型: Point (明確的服務位置點)"
+    )
+    coordinates: Tuple[float, float] = Field(
+        ..., description="座標 [經度, 緯度]，例如：[121.123, 24.456]"
+    )
+
+    @field_validator("coordinates")
+    @classmethod
+    def validate_point_coordinates(cls, v):
+        if len(v) != 2:
+            raise ValueError("Point 座標必須包含兩個值 [經度, 緯度]")
+        lng, lat = v
+        if not (-180 <= lng <= 180):
+            raise ValueError(f"經度必須在 -180 到 180 之間，當前值: {lng}")
+        if not (-90 <= lat <= 90):
+            raise ValueError(f"緯度必須在 -90 到 90 之間，當前值: {lat}")
+        return v
+
+    class Config:
+        json_schema_extra = {
+            "example": {"type": "Point", "coordinates": [121.3897, 23.9870]}
+        }
+
+
+class PolygonCoordinates(BaseModel):
+    """Polygon 類型座標 - 表示覆蓋範圍（多邊形區域）"""
+
+    type: Literal["Polygon"] = Field(
+        "Polygon", description="座標類型: Polygon (表示覆蓋範圍)"
+    )
+    coordinates: List[Tuple[float, float]] = Field(
+        ...,
+        description="座標陣列 [[經度, 緯度], [經度, 緯度], ...]，例如：[[121.1, 24.1], [121.2, 24.1], [121.2, 24.2]]",
+    )
+
+    @field_validator("coordinates")
+    @classmethod
+    def validate_polygon_coordinates(cls, v):
+        if len(v) < 3:
+            raise ValueError("Polygon 至少需要 3 個座標點")
+        for i, coord in enumerate(v):
+            if len(coord) != 2:
+                raise ValueError(f"座標點 {i} 必須包含兩個值 [經度, 緯度]")
+            lng, lat = coord
+            if not (-180 <= lng <= 180):
+                raise ValueError(f"座標點 {i} 經度必須在 -180 到 180 之間，當前值: {lng}")
+            if not (-90 <= lat <= 90):
+                raise ValueError(f"座標點 {i} 緯度必須在 -90 到 90 之間，當前值: {lat}")
+        return v
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "type": "Polygon",
+                "coordinates": [
+                    [121.38, 23.98],
+                    [121.39, 23.98],
+                    [121.39, 23.99],
+                    [121.38, 23.99],
+                ],
+            }
+        }
+
+
+class LineStringCoordinates(BaseModel):
+    """LineString 類型座標 - 路徑規劃（線段）"""
+
+    type: Literal["LineString"] = Field(
+        "LineString", description="座標類型: LineString (路徑規劃)"
+    )
+    coordinates: List[Tuple[float, float]] = Field(
+        ...,
+        description="座標陣列 [[經度, 緯度], [經度, 緯度], ...]，例如：[[121.1, 24.1], [121.2, 24.2]]",
+    )
+
+    @field_validator("coordinates")
+    @classmethod
+    def validate_linestring_coordinates(cls, v):
+        if len(v) < 2:
+            raise ValueError("LineString 至少需要 2 個座標點")
+        for i, coord in enumerate(v):
+            if len(coord) != 2:
+                raise ValueError(f"座標點 {i} 必須包含兩個值 [經度, 緯度]")
+            lng, lat = coord
+            if not (-180 <= lng <= 180):
+                raise ValueError(f"座標點 {i} 經度必須在 -180 到 180 之間，當前值: {lng}")
+            if not (-90 <= lat <= 90):
+                raise ValueError(f"座標點 {i} 緯度必須在 -90 到 90 之間，當前值: {lat}")
+        return v
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "type": "LineString",
+                "coordinates": [[121.38, 23.98], [121.39, 23.99], [121.40, 23.99]],
+            }
+        }
+
+
+# 使用 Union 來支援三種不同的座標類型
+PlaceCoordinates = Union[PointCoordinates, PolygonCoordinates, LineStringCoordinates]
+
+
+class PlaceResource(BaseModel):
+    """站點資源資料"""
+
+    name: str = Field(..., description="資源名稱，例如：女廁")
+    amount: int = Field(..., description="數量，例如：10")
+    unit: str = Field(..., description="單位，例如：座")
+
+    class Config:
+        json_schema_extra = {
+            "example": {"name": "測試資源名稱", "amount": 10, "unit": "個"}
+        }
+
+
 class PlaceBase(BaseModel):
     name: str
-    address: str
-    address_description: Optional[str] = None
-    coordinates: dict  # JSONB: {lat: float, lng: float, ...}
-    type: str
-    sub_type: Optional[str] = None
-    info_sources: Optional[List[str]] = []
-    verified_at: Optional[int] = None
-    website_url: Optional[str] = None
-    status: str
-    resources: Optional[List[dict]] = None
-    open_date: Optional[str] = None
-    end_date: Optional[str] = None
-    open_time: Optional[str] = None
-    end_time: Optional[str] = None
-    contact_name: str
-    contact_phone: str
-    notes: Optional[str] = None
-    tags: Optional[List[dict]] = None
-    additional_info: Optional[dict] = None
+    address: str = Field(
+        ..., description="地址格式規定：不能有空格、數字或英文一律半型、盡量是完整地址"
+    )
+    address_description: Optional[str] = Field(
+        None, description="針對地址的進一步說明（如果地方不好找的話）"
+    )
+    coordinates: PlaceCoordinates = Field(..., description="GeoJSON 格式的經緯度座標")
+    type: str = Field(
+        ...,
+        description="站點類型，例如：醫療、加水、廁所、洗澡、避難、住宿、物資、心理援助",
+    )
+    info_sources: Optional[List[str]] = Field(
+        default_factory=list, description="資料來源連結"
+    )
+    verified_at: Optional[int] = Field(
+        None, description="資料最後被核實的時間（Unix timestamp）"
+    )
+    website_url: Optional[str] = Field(
+        None, description="若這個地方是某單位提供，可附上該單位官方連結"
+    )
+    status: str = Field(..., description="嚴格規定僅限於：開放、暫停、關閉")
+    resources: Optional[List[PlaceResource]] = Field(None, description="站點資源列表")
+    open_date: Optional[str] = Field(None, description="站點開放日期，格式：2025/09/30")
+    end_date: Optional[str] = Field(
+        None, description="站點預計關閉日期，格式：2025/10/12"
+    )
+    open_time: Optional[str] = Field(
+        None,
+        description="站點每天開放時間（24小時格式），例如：08:00，若為24小時開放則留 null",
+    )
+    end_time: Optional[str] = Field(
+        None,
+        description="站點每天關閉時間（24小時格式），例如：20:00，若為24小時開放則留 null",
+    )
+    contact_name: str = Field(..., description="聯絡人姓名，例如：張先生")
+    contact_phone: str = Field(..., description="聯絡人手機號碼")
+    notes: Optional[str] = Field(None, description="其他備註，例如：本站點的量能")
+
+    @field_validator("status")
+    @classmethod
+    def validate_status(cls, v):
+        # allowed_statuses = ["開放", "暫停", "關閉"]
+        allowed_statuses = [e.value for e in PlaceStatusEnum]
+        if v not in allowed_statuses:
+            raise ValueError(f"status 必須是 {', '.join(allowed_statuses)} 其中之一")
+        return v
 
 
 class PlaceCreate(PlaceBase):
     type: PlaceTypeEnum
-    status: PlaceStatusEnum
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "name": "測試站點A",
+                "address": "976台灣花蓮縣光復鄉測試路100號",
+                "address_description": "測試路與範例街路口",
+                "coordinates": {"type": "Point", "coordinates": [121.3897, 23.9870]},
+                "type": "醫療",
+                "info_sources": [
+                    "https://example.com/test-source1",
+                    "https://example.com/test-source2",
+                ],
+                "verified_at": 1727654400,
+                "website_url": "https://example.com/test-hospital",
+                "status": "開放",
+                "resources": [
+                    {"name": "測試資源A", "amount": 5, "unit": "個"},
+                    {"name": "測試資源B", "amount": 10, "unit": "件"},
+                ],
+                "open_date": "2025/09/30",
+                "end_date": "2025/10/12",
+                "open_time": "08:00",
+                "end_time": "20:00",
+                "contact_name": "測試聯絡人",
+                "contact_phone": "0912345678",
+                "notes": "測試備註內容",
+            }
+        }
 
 
 class PlacePatch(BaseModel):
     name: Optional[str] = None
     address: Optional[str] = None
     address_description: Optional[str] = None
-    coordinates: Optional[dict] = None
+    coordinates: Optional[PlaceCoordinates] = None
     type: Optional[PlaceTypeEnum] = None
-    sub_type: Optional[str] = None
     info_sources: Optional[List[str]] = None
     verified_at: Optional[int] = None
     website_url: Optional[str] = None
     status: Optional[PlaceStatusEnum] = None
-    resources: Optional[List[dict]] = None
+    resources: Optional[List[PlaceResource]] = None
     open_date: Optional[str] = None
     end_date: Optional[str] = None
     open_time: Optional[str] = None
@@ -796,8 +1043,6 @@ class PlacePatch(BaseModel):
     contact_name: Optional[str] = None
     contact_phone: Optional[str] = None
     notes: Optional[str] = None
-    tags: Optional[List[dict]] = None
-    additional_info: Optional[dict] = None
 
 
 class Place(PlaceBase, BaseColumn):

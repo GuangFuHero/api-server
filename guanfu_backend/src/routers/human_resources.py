@@ -83,7 +83,7 @@ def get_human_resource(id: str, db: Session = Depends(get_db)):
     "/{id}",
     response_model=schemas.HumanResource,
     summary="更新特定人力需求",
-    dependencies=[Security(require_modify_api_key)],
+    # dependencies=[Security(require_modify_api_key)],
 )
 def patch_human_resource(
         id: str, resource_in: schemas.HumanResourcePatch, db: Session = Depends(get_db)
@@ -94,8 +94,8 @@ def patch_human_resource(
     db_resource = crud.get_by_id(db, models.HumanResource, id)
     if db_resource is None:
         raise HTTPException(status_code=404, detail="Human Resource not found")
-    if db_resource.valid_pin and db_resource.valid_pin != resource_in.valid_pin:
-        raise HTTPException(status_code=400, detail="The PIN you entered is incorrect.")
+    # if db_resource.valid_pin and db_resource.valid_pin != resource_in.valid_pin:
+    #     raise HTTPException(status_code=400, detail="The PIN you entered is incorrect.")
     if db_resource.status == HumanResourceRoleStatusEnum.completed.value:
         raise HTTPException(status_code=400, detail="Completed data cannot be edited.")
 
