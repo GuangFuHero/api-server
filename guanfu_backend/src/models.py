@@ -43,7 +43,7 @@ class Shelter(Base):
     __tablename__ = "shelters"
     id = Column(String, primary_key=True, default=generate_uuid_str)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
-    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"), onupdate=func.now())
     name = Column(String, nullable=False)
     location = Column(String, nullable=False)
     phone = Column(String, nullable=False)
@@ -63,7 +63,7 @@ class MedicalStation(Base):
     __tablename__ = "medical_stations"
     id = Column(String, primary_key=True, default=generate_uuid_str)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
-    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"), onupdate=func.now())
     station_type = Column(String, nullable=False)
     name = Column(String, nullable=False)
     status = Column(String, nullable=False)
@@ -86,7 +86,7 @@ class MentalHealthResource(Base):
     __tablename__ = "mental_health_resources"
     id = Column(String, primary_key=True, default=generate_uuid_str)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
-    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"), onupdate=func.now())
     duration_type = Column(String, nullable=False)
     name = Column(String, nullable=False)
     service_format = Column(String, nullable=False)
@@ -110,7 +110,7 @@ class Accommodation(Base):
     __tablename__ = "accommodations"
     id = Column(String, primary_key=True, default=generate_uuid_str)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
-    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"), onupdate=func.now())
     township = Column(String, nullable=False)
     name = Column(String, nullable=False)
     has_vacancy = Column(String, nullable=False)
@@ -134,7 +134,7 @@ class ShowerStation(Base):
     __tablename__ = "shower_stations"
     id = Column(String, primary_key=True, default=generate_uuid_str)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
-    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"), onupdate=func.now())
     name = Column(String, nullable=False)
     address = Column(String, nullable=False)
     facility_type = Column(String, nullable=False)
@@ -159,7 +159,7 @@ class WaterRefillStation(Base):
     __tablename__ = "water_refill_stations"
     id = Column(String, primary_key=True, default=generate_uuid_str)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
-    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"), onupdate=func.now())
     name = Column(String, nullable=False)
     address = Column(String, nullable=False)
     water_type = Column(String, nullable=False)
@@ -182,7 +182,7 @@ class Restroom(Base):
     __tablename__ = "restrooms"
     id = Column(String, primary_key=True, default=generate_uuid_str)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
-    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"), onupdate=func.now())
     name = Column(String, nullable=False)
     address = Column(String, nullable=False)
     facility_type = Column(String, nullable=False)
@@ -209,7 +209,7 @@ class HumanResource(Base):
     __tablename__ = "human_resources"
     id = Column(String, primary_key=True, default=generate_uuid_str)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
-    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"), onupdate=func.now())
     org = Column(String, nullable=False)
     address = Column(String, nullable=False)
     phone = Column(String, nullable=False)
@@ -240,7 +240,7 @@ class Supply(Base):
     __tablename__ = "supplies"
     id = Column(String, primary_key=True, default=generate_uuid_str)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
-    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"), onupdate=func.now())
     name = Column(String)
     address = Column(String)
     phone = Column(String)
@@ -267,7 +267,7 @@ class Report(Base):
     __tablename__ = "reports"
     id = Column(String, primary_key=True, default=generate_uuid_str)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
-    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"), onupdate=func.now())
     location_id = Column(String, nullable=False)
     name = Column(String, nullable=False)
     location_type = Column(String, nullable=False)
@@ -287,7 +287,7 @@ class SupplyProvider(Base):
     provide_count = Column(Integer)
     provide_unit = Column(String)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
-    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"), onupdate=func.now())
 
 
 class LineUser(Base):
@@ -347,4 +347,4 @@ class Place(Base):
     contact_phone = Column(String, nullable=False)
     notes = Column(Text, server_default="")
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
-    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"), onupdate=func.now())
