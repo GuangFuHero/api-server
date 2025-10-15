@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Security, Request
+from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List, Literal
 from .. import crud, models, schemas
@@ -23,9 +24,6 @@ def list_supplies(
     embed: Optional[str] = Query(None, enum=["all"]),
     limit: int = Query(50, ge=1, le=500),
     offset: int = Query(0, ge=0),
-    order_by: Optional[Literal["asc", "desc"]] = Query(
-        "desc", description="時間排序方式：asc 或 desc，預設為 desc"
-    ),
     db: Session = Depends(get_db),
 ):
     """
@@ -33,14 +31,10 @@ def list_supplies(
 
     - order_by: 指定時間排序方式，可選 "asc" (由舊到新) 或 "desc" (由新到舊)，預設為 desc (最新的在前)
     """
-    if order_by == "asc":
-        order_clause = models.Supply.updated_at.asc()
-    else:
-        # 預設使用 desc，確保有明確的排序
-        order_clause = models.Supply.updated_at.desc()
+    order_by = desc(models.Supply.updated_at)
 
     supplies = crud.get_multi(
-        db, model=models.Supply, skip=offset, limit=limit, order_by=order_clause
+        db, model=models.Supply, skip=offset, limit=limit, order_by=order_by
     )
 
     if embed == "all":
