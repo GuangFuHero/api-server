@@ -950,7 +950,9 @@ class PlaceBase(BaseModel):
     address_description: Optional[str] = Field(
         None, description="針對地址的進一步說明（如果地方不好找的話）"
     )
-    coordinates: PlaceCoordinates = Field(..., description="GeoJSON 格式的經緯度座標")
+    coordinates: Optional[PlaceCoordinates] = Field(
+        None, description="GeoJSON 格式的經緯度座標"
+    )
     type: str = Field(
         ...,
         description="站點類型，例如：醫療、加水、廁所、洗澡、避難、住宿、物資、心理援助",
