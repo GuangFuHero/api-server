@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     LINE_REDIRECT_URI: str
     LINE_SCOPES: str = "profile openid email"
 
+    # Discord Webhook
+    DISCORD_WEBHOOK_URL: str = ""
+
 
 # 建立一個全域的 settings 實例供整個專案引用
 settings = Settings()
