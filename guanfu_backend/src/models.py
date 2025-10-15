@@ -334,6 +334,7 @@ class Place(Base):
     address_description = Column(String, server_default="")
     coordinates = Column(JSONB, nullable=False)
     type = Column(String, nullable=False)
+    sub_type = Column(String, server_default="")
     info_sources = Column(ARRAY(Text), nullable=True)
     verified_at = Column(BigInteger)
     website_url = Column(String)

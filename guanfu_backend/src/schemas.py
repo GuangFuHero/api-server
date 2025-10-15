@@ -955,6 +955,9 @@ class PlaceBase(BaseModel):
         ...,
         description="站點類型，例如：醫療、加水、廁所、洗澡、避難、住宿、物資、心理援助",
     )
+    sub_type: Optional[str] = Field(
+        None, description="站點服務類別，例如：流動廁所/車站/學校、民宿/飯店/民眾提供"
+    )
     info_sources: Optional[List[str]] = Field(
         default_factory=list, description="資料來源連結"
     )
@@ -1003,6 +1006,7 @@ class PlaceCreate(PlaceBase):
                 "address_description": "測試路與範例街路口",
                 "coordinates": {"type": "Point", "coordinates": [121.3897, 23.9870]},
                 "type": "醫療",
+                "sub_type": "測試醫療站",
                 "info_sources": [
                     "https://example.com/test-source1",
                     "https://example.com/test-source2",
@@ -1031,6 +1035,7 @@ class PlacePatch(BaseModel):
     address_description: Optional[str] = None
     coordinates: Optional[PlaceCoordinates] = None
     type: Optional[PlaceTypeEnum] = None
+    sub_type: Optional[str] = None
     info_sources: Optional[List[str]] = None
     verified_at: Optional[int] = None
     website_url: Optional[str] = None
