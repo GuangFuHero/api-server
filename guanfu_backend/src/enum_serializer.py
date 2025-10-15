@@ -196,3 +196,12 @@ class PlaceTypeEnum(enum.Enum):
     accommodation = "住宿"
     supplies = "物資"
     mental_health = "心理援助"
+
+
+class RequirementsHrTypeEnum(enum.Enum):
+    general_volunteer = "一般志工"
+    professional_technical = "專業技術"
+    cleaning = "清潔/整理"
+    medical_care = "醫療照護"
+    logistics = "後勤支援"
+    other = "其他"
