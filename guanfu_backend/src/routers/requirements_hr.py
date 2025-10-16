@@ -65,7 +65,6 @@ def create_requirement_hr(
 
     選填欄位：
     - received_count: 已滿足數量（預設為 0）
-    - additional_info: 額外資訊（JSON 格式）
 
     需要 API Key 權限
     """

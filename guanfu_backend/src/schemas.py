@@ -1072,7 +1072,6 @@ class RequirementsHrBase(BaseModel):
     unit: str
     require_count: NonNegativeInt
     received_count: NonNegativeInt
-    additional_info: Optional[dict] = None
 
 
 class RequirementsHrCreate(RequirementsHrBase):
@@ -1087,7 +1086,6 @@ class RequirementsHrPatch(BaseModel):
     unit: Optional[str] = None
     require_count: Optional[NonNegativeInt] = None
     received_count: Optional[NonNegativeInt] = None
-    additional_info: Optional[dict] = None
 
 
 class RequirementsHr(RequirementsHrBase, BaseColumn):

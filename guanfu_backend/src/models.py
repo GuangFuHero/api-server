@@ -362,4 +362,3 @@ class RequirementsHr(Base):
     received_count = Column(Integer, nullable=False, server_default="0")
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"), onupdate=func.now())
-    additional_info = Column(JSONB)
