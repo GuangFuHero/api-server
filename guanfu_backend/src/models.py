@@ -362,3 +362,16 @@ class RequirementsHr(Base):
     received_count = Column(Integer, nullable=False, server_default="0")
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"), onupdate=func.now())
+
+
+class RequirementsSupplies(Base):
+    __tablename__ = "requirements_supplies"
+    id = Column(String, primary_key=True, default=generate_uuid_str)
+    place_id = Column(String, ForeignKey("places.id"), nullable=False)
+    required_type = Column(String, nullable=False)
+    name = Column(String, nullable=False)
+    unit = Column(String, nullable=False)
+    require_count = Column(Integer, nullable=False)
+    received_count = Column(Integer, nullable=False, server_default="0")
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"), onupdate=func.now())
