@@ -196,6 +196,8 @@ class PlaceTypeEnum(enum.Enum):
     accommodation = "住宿"
     supplies = "物資"
     mental_health = "心理援助"
+    gas_station = "加油"
+    repair_station = "維修"
 
 
 class RequirementsHrTypeEnum(enum.Enum):
