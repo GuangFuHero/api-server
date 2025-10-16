@@ -2,27 +2,26 @@ import httpx
 from ..config import settings
 import json
 
-async def send_to_discord(payload: dict):
+async def send_discord_message(content: str, embed_data: dict | None = None):
     """
-    Sends a message to the Discord webhook.
+    Sends a message to a Discord webhook.
 
     Args:
-        payload: The JSON payload to send to Discord.
+        content: The main text content of the message.
+        embed_data: Optional dictionary to be sent as a formatted JSON embed.
     """
     if not settings.DISCORD_WEBHOOK_URL:
         return
 
-    # Discord webhooks expect a 'content' key.
-    # We'll format the payload for better readability.
-    message = {
-        "content": "New POST request received:",
-        "embeds": [
+    message = {"content": content}
+
+    if embed_data:
+        message["embeds"] = [
             {
-                "description": f"```json\n{json.dumps(payload, indent=2, ensure_ascii=False)}\n```",
+                "description": f"```json\n{json.dumps(embed_data, indent=2, ensure_ascii=False)}\n```",
                 "color": 5814783  # A nice blue color
             }
         ]
-    }
 
     async with httpx.AsyncClient() as client:
         try:

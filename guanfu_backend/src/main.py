@@ -1,6 +1,4 @@
 import logging
-import json
-import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -10,11 +8,9 @@ from sqlalchemy.exc import IntegrityError
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
-from starlette.middleware.base import BaseHTTPMiddleware
 
 from . import database
 from .config import settings
-from .services.discord_webhook import send_to_discord
 from .routers import (
     accommodations,
     human_resources,
@@ -31,7 +27,7 @@ from .routers import (
     volunteer_organizations,
     water_refill_stations,
     line,
-    test, # Import the new test router
+    test,  # Import the new test router
 )
 
 
@@ -44,38 +40,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-# --- Discord Webhook Middleware ---
-class DiscordWebhookMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        # We only care about POST requests
-        if request.method != "POST":
-            return await call_next(request)
 
-        # Excluded paths
-        excluded_paths = ["/line/callback"]
-        if request.url.path in excluded_paths:
-            return await call_next(request)
-
-        # Read the body once
-        body_bytes = await request.body()
-
-        # This is a workaround to allow the body to be read again by the endpoint
-        async def receive():
-            return {"type": "http.request", "body": body_bytes}
-        request = Request(request.scope, receive)
-
-        # If there's a body, try to send it to Discord
-        if body_bytes:
-            try:
-                payload = json.loads(body_bytes)
-                # Run the webhook in the background so it doesn't block the response
-                asyncio.create_task(send_to_discord(payload))
-            except json.JSONDecodeError:
-                # Not a JSON body, ignore
-                pass
-
-        response = await call_next(request)
-        return response
 
 
 # --- 根據環境動態設定 Swagger UI 的伺服器 URL ---
@@ -113,7 +78,7 @@ app = FastAPI(
 )
 
 # Add Middleware
-app.add_middleware(DiscordWebhookMiddleware)
+
 
 
 # ===================================================================
