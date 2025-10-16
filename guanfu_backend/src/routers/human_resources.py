@@ -28,6 +28,7 @@ router = APIRouter(
 def list_human_resources(
     request: Request,
     status: Optional[HumanResourceStatusEnum] = Query(None),
+    q_role: Optional[str] = Query(None),
     role_status: Optional[HumanResourceRoleStatusEnum] = Query(None),
     role_type: Optional[HumanResourceRoleTypeEnum] = Query(None),
     limit: int = Query(20, ge=1, le=200),
@@ -48,17 +49,34 @@ def list_human_resources(
         "role_type": role_type,
     }
 
-    order_by = None
+    normalized_filters = crud.normalize_filters_dict(filters)
+    query = db.query(models.HumanResource)
+    if normalized_filters:
+        query = query.filter_by(**normalized_filters)
+
+    if q_role:
+        keywords = [kw.strip() for kw in q_role.split(",") if kw.strip()]
+        if keywords:
+            keyword_clauses = []
+            for kw in keywords:
+                pattern = f"%{kw}%"
+                keyword_clauses.append(
+                    or_(
+                        models.HumanResource.assignment_notes.ilike(pattern),
+                        models.HumanResource.role_name.ilike(pattern),
+                        models.HumanResource.role_type.ilike(pattern),
+                    )
+                )
+            query = query.filter(or_(*keyword_clauses))
+
     if order_by_time == "asc":
         query = query.order_by(models.HumanResource.created_at.asc())
     elif order_by_time == "desc":
-        order_by = models.HumanResource.created_at.desc()
+        query = query.order_by(models.HumanResource.created_at.desc())
 
-    resources = crud.get_multi(
-        db, models.HumanResource, skip=offset, limit=limit, order_by=order_by, **filters
-    )
+    total = query.count()
+    resources = query.offset(offset).limit(limit).all()
     resources = crud.mask_id_if_field_equals(resources, "status", "completed")
-    total = crud.count(db, models.HumanResource, **filters)
     next_link = crud.build_next_link(request, limit=limit, offset=offset, total=total)
     return {
         "member": resources,
