@@ -101,7 +101,7 @@ DATABASE_URL=postgresql://自訂使用者名稱:自訂密碼@postgres:5432/資�
 # LINE 登入設定
 LINE_CLIENT_ID=你的 LINE Channel ID
 LINE_CLIENT_SECRET=你的 LINE Channel Secret
-LINE_REDIRECT_URI=*/line/callback
+LINE_REDIRECT_URI=*/line/token
 ```
 
 取得 LINE 登入憑證的步驟：
@@ -109,7 +109,7 @@ LINE_REDIRECT_URI=*/line/callback
 2. 建立新的 Provider 或選擇現有的 Provider
 3. 建立新的 LINE Login channel
 4. 在 Channel 設定中取得 Channel ID 和 Channel Secret
-5. 設定 Callback URL（例如：`http://localhost:8080/line/callback`）
+5. 設定 Callback URL（例如：`http://localhost:8080/line/token`）
 
 ### 3. 啟動服務
 
