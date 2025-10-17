@@ -30,7 +30,7 @@ jobs:
             echo "should_deploy=true" >> $GITHUB_OUTPUT
             echo "Deploying to dev environment: develop branch"
           elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "environment=production" >> $GITHUB_OUTPUT
+            echo "environment=prod" >> $GITHUB_OUTPUT
             echo "version=latest" >> $GITHUB_OUTPUT
             echo "should_deploy=true" >> $GITHUB_OUTPUT
             echo "Deploying to production environment: main branch"
