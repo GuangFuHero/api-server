@@ -160,4 +160,3 @@ app.include_router(supplies.router)
 app.include_router(supply_items.router)
 app.include_router(supply_providers.router)
 app.include_router(line.router)
-app.include_router(test.router) # Include the new test router
