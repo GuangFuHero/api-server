@@ -18,12 +18,19 @@ router = APIRouter(prefix="/line", tags=["OAuth2 (LINE)"], include_in_schema=Fal
 
 @router.get("/authorize", summary="取得LINE 授權入口")
 def authorize(
+        redirect_uri: str = Query(..., description="LINE OAuth 回呼 URL"),
         prompt: Optional[str] = Query(default=None),
         response_mode: Optional[str] = Query(default=None),
         disable_auto_login: Optional[bool] = Query(default=None),
         db: Session = Depends(get_db),
 ):
-    url = build_authorize_url(db, prompt=prompt, response_mode=response_mode, disable_auto_login=disable_auto_login)
+    url = build_authorize_url(
+        db,
+        redirect_uri=redirect_uri,
+        prompt=prompt,
+        response_mode=response_mode,
+        disable_auto_login=disable_auto_login
+    )
     return RedirectResponse(url)
 
 

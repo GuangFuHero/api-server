@@ -321,6 +321,7 @@ class LineSessionState(Base):
     state = Column(String, unique=True, index=True)
     nonce = Column(String)
     code_verifier = Column(String)
+    redirect_uri = Column(String)  # 儲存前端傳入的 redirect_uri
     created_at = Column(DateTime, default=func.now())
     consumed = Column(Boolean, default=False)
     expires_at = Column(DateTime)

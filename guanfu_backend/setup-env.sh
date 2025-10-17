@@ -6,7 +6,7 @@
 #   LINE_CLIENT_SECRET=your_line_client_secret \
 #   ./setup-env.sh
 #
-# Note: LINE_REDIRECT_URI 會根據 ENVIRONMENT 自動生成，通常不需要手動設定
+# Note: LINE_REDIRECT_URI 已棄用，現在由前端在 API 請求中提供
 
 set -e
 
@@ -19,17 +19,9 @@ API_KEY_LIST=${API_KEY_LIST:-}
 LINE_CLIENT_ID=${LINE_CLIENT_ID:-""}
 LINE_CLIENT_SECRET=${LINE_CLIENT_SECRET:-""}
 
-# LINE_REDIRECT_URI 根據環境自動生成（不是 secret，可以公開）
-# 可透過環境變數覆寫以支援特殊情況
-if [ -z "$LINE_REDIRECT_URI" ]; then
-  if [ "$ENVIRONMENT" = "prod" ]; then
-    LINE_REDIRECT_URI="https://api.gf250923.org/line/callback"
-  elif [ "$ENVIRONMENT" = "dev" ]; then
-    LINE_REDIRECT_URI="https://uat-api.gf250923.org/line/callback"
-  else
-    LINE_REDIRECT_URI="http://localhost:8080/line/callback"
-  fi
-fi
+# LINE_REDIRECT_URI (DEPRECATED: 現在由前端在 /line/authorize 請求中提供)
+# 保留此設定以向下相容，但新的實作不再使用環境變數中的值
+LINE_REDIRECT_URI=${LINE_REDIRECT_URI:-""}
 
 # Database settings
 DB_USER="guangfu"
@@ -81,7 +73,8 @@ DATABASE_URL=${DATABASE_URL}
 # ----------------------------------------------------------------------------
 # LINE Login Settings
 # ----------------------------------------------------------------------------
-# LINE_REDIRECT_URI is auto-generated based on ENVIRONMENT
+# ⚠️  DEPRECATED: LINE_REDIRECT_URI 現在由前端在 /line/authorize 請求中提供
+# 保留此設定以向下相容，但新的實作不再使用此環境變數
 LINE_CLIENT_ID=${LINE_CLIENT_ID}
 LINE_CLIENT_SECRET=${LINE_CLIENT_SECRET}
 LINE_REDIRECT_URI=${LINE_REDIRECT_URI}
