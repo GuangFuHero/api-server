@@ -1,10 +1,11 @@
 from typing import List, Optional, Type, TypeVar
 from urllib.parse import urlencode
 from datetime import datetime, timezone
+import json
 
 from fastapi import HTTPException, Request
 from pydantic import BaseModel
-from sqlalchemy import exists, and_, select
+from sqlalchemy import exists, and_, select, text
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.inspection import inspect as sa_inspect
@@ -29,7 +30,9 @@ def get_by_id(db: Session, model: Type[ModelType], id: Any) -> Optional[ModelTyp
 
 
 def build_next_link(request: Request, *, limit: int, offset: int, total: int) -> Optional[str]:
-    """回傳相對路徑的下一頁連結，如 /shelters?...&limit=50&offset=100"""
+    """
+    回傳相對路徑的下一頁連結，如 /shelters?...&limit=50&offset=100
+    """
     if offset + limit >= total:
         return None
     q = dict(request.query_params)  # 保留原查詢參數（例如 status、embed 等）
@@ -39,12 +42,12 @@ def build_next_link(request: Request, *, limit: int, offset: int, total: int) ->
 
 
 def get_multi(
-        db: Session,
-        model: Type[ModelType],
-        skip: int = 0,
-        limit: int = 100,
-        order_by=None,
-        **filters: Any,
+    db: Session,
+    model: Type[ModelType],
+    skip: int = 0,
+    limit: int = 100,
+    order_by=None,
+    **filters: Any,
 ) -> List[ModelType]:
     """
     通用列表查詢：
@@ -66,14 +69,17 @@ def get_multi(
 
 
 def orm_to_dict(obj: Any) -> dict:
-    """orm -> dict"""
+    """
+orm -> dict"""
     mapper = sa_inspect(obj).mapper
     data = {c.key: getattr(obj, c.key) for c in mapper.column_attrs}
     return data
 
 
 def mask_id_if_field_equals(rows, field: str, value: bool | str):
-    """When the field is value, set the id to an empty string"""
+    """
+    When the field is value, set the id to an empty string
+    """
     out: List[dict] = []
     for r in rows:
         data = orm_to_dict(r)
@@ -86,7 +92,7 @@ def mask_id_if_field_equals(rows, field: str, value: bool | str):
 def count(db: Session, model: Type[ModelType], **filters) -> int:
     query = db.query(model)
     if filters:
-        query = query.filter_by(**normalize_filters_dict(filters))  # Enum to value
+        query = query.filter_by(**normalize_filters_dict(filters))
     return query.count()
 
 
@@ -112,6 +118,32 @@ def create_with_input(db: Session, model: Type[ModelType], obj_in: CreateSchemaT
     """
     payload = normalize_payload_dict(obj_in.model_dump(mode="json"))
     extra = normalize_payload_dict(kwargs) if kwargs else {}
+
+    # Ensure created_at and updated_at are set if not present, to satisfy nullable=False constraint
+    if "created_at" not in payload and "created_at" not in extra:
+        extra["created_at"] = int(datetime.now(timezone.utc).timestamp())
+    if "updated_at" not in payload and "updated_at" not in extra:
+        extra["updated_at"] = int(datetime.now(timezone.utc).timestamp())
+
+    if model == models.HumanResource:
+        jsonb_fields = ['skills', 'certifications', 'language_requirements']
+        for field in jsonb_fields:
+            if field in payload and payload[field] is not None:
+                # Manually cast to JSONB for specific fields to override model's ARRAY type
+                json_string = json.dumps(payload[field])
+                payload[field] = text(f"\'{json_string}\'::jsonb")
+
+        # Set default values for required fields that might be missing
+        if "experience_level" not in payload or payload["experience_level"] is None:
+            payload["experience_level"] = "level_1"
+
+        # Set default timestamps if not provided (as Unix timestamp integers)
+        now_timestamp = int(datetime.now(timezone.utc).timestamp())
+        if "shift_start_ts" not in payload or payload["shift_start_ts"] is None:
+            payload["shift_start_ts"] = now_timestamp
+        if "shift_end_ts" not in payload or payload["shift_end_ts"] is None:
+            payload["shift_end_ts"] = now_timestamp
+
     db_obj = model(**payload, **extra)
     db.add(db_obj)
     db.commit()
@@ -152,7 +184,16 @@ def create_supply_with_items(db: Session, obj_in: SupplyCreate) -> models.Supply
         # 1) 建立 Supply 主體
         supply_data_raw = obj_in.model_dump(exclude={"supplies"}, exclude_unset=True)
         supply_data = normalize_payload_dict(supply_data_raw)  # Enum to value
-        db_supply = models.Supply(**supply_data, valid_pin=generate_pin(), spam_warn=False)
+
+        # 設置必填的時間欄位（Supply 使用 bigint 存儲時間戳）
+        now_timestamp = int(datetime.now(timezone.utc).timestamp())
+        db_supply = models.Supply(
+            **supply_data,
+            valid_pin=generate_pin(),
+            spam_warn=False,
+            created_at=now_timestamp,
+            updated_at=now_timestamp
+        )
         db.add(db_supply)
         db.flush()  # 先拿到 db_supply.id 供 item 關聯
 
@@ -198,15 +239,24 @@ def create_supply_with_items(db: Session, obj_in: SupplyCreate) -> models.Supply
         db.refresh(db_supply)
         return db_supply
 
-    except IntegrityError:
+    except IntegrityError as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail="建立供應單時發生資料完整性錯誤")
+        # 印出詳細錯誤以便調試
+        import traceback
+        print(f"IntegrityError: {str(e)}")
+        print(f"原始錯誤: {e.orig}")
+        traceback.print_exc()
+        raise HTTPException(status_code=400, detail=f"建立供應單時發生資料完整性錯誤: {str(e.orig)}")
     except HTTPException:
         db.rollback()
         raise
-    except Exception:
+    except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail="建立供應單時發生未預期錯誤")
+        import traceback
+        print(f"Exception: {str(e)}")
+        print(f"Traceback:")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"建立供應單時發生未預期錯誤: {str(e)}")
 
 
 def distribute_items(db: Session, supply_id: str, items_to_distribute: List[SupplyItemDistribution]) -> Optional[List[models.SupplyItem]]:
@@ -314,7 +364,9 @@ def supply_merge_item_counts(data: List[Dict[str, int]]) -> Dict[str, int]:
 
 
 def supply_batch_increment_received(db: Session, supply_id: str, item_counts: Dict[str, int]) -> Supply:
-    """對指定 supply 的項目批次累加 received_count，並回傳更新後的 Supply"""
+    """
+    對指定 supply 的項目批次累加 received_count，並回傳更新後的 Supply
+    """
     # 取得 supply
     supply = db.scalar(select(Supply).where(Supply.id == supply_id))
     if supply is None:
