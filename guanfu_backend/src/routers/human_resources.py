@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Security, Request
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from typing import Optional, Literal
 import asyncio
@@ -47,7 +48,7 @@ def list_human_resources(
 
     order_by = None
     if order_by_time == "asc":
-        order_by = models.HumanResource.created_at.asc()
+        query = query.order_by(models.HumanResource.created_at.asc())
     elif order_by_time == "desc":
         order_by = models.HumanResource.created_at.desc()
 
@@ -55,7 +56,6 @@ def list_human_resources(
         db, models.HumanResource, skip=offset, limit=limit, order_by=order_by, **filters
     )
     resources = crud.mask_id_if_field_equals(resources, "status", "completed")
-    total = crud.count(db, models.HumanResource, **filters)
     next_link = crud.build_next_link(request, limit=limit, offset=offset, total=total)
     return {
         "member": resources,

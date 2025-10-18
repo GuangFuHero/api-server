@@ -321,6 +321,7 @@ class LineSessionState(Base):
     state = Column(String, unique=True, index=True)
     nonce = Column(String)
     code_verifier = Column(String)
+    redirect_uri = Column(String)  # 儲存前端傳入的 redirect_uri
     created_at = Column(DateTime, default=func.now())
     consumed = Column(Boolean, default=False)
     expires_at = Column(DateTime)
@@ -347,5 +348,31 @@ class Place(Base):
     contact_name = Column(String, nullable=False)
     contact_phone = Column(String, nullable=False)
     notes = Column(Text, server_default="")
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"), onupdate=func.now())
+
+
+class RequirementsHr(Base):
+    __tablename__ = "requirements_hr"
+    id = Column(String, primary_key=True, default=generate_uuid_str)
+    place_id = Column(String, ForeignKey("places.id"), nullable=False)
+    required_type = Column(String, nullable=False)
+    name = Column(String, nullable=False)
+    unit = Column(String, nullable=False)
+    require_count = Column(Integer, nullable=False)
+    received_count = Column(Integer, nullable=False, server_default="0")
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"), onupdate=func.now())
+
+
+class RequirementsSupplies(Base):
+    __tablename__ = "requirements_supplies"
+    id = Column(String, primary_key=True, default=generate_uuid_str)
+    place_id = Column(String, ForeignKey("places.id"), nullable=False)
+    required_type = Column(String, nullable=False)
+    name = Column(String, nullable=False)
+    unit = Column(String, nullable=False)
+    require_count = Column(Integer, nullable=False)
+    received_count = Column(Integer, nullable=False, server_default="0")
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"), onupdate=func.now())

@@ -510,7 +510,7 @@ class RestroomCollection(CollectionBase):
 
 
 # ===================================================================
-# 人力資源 (Human Resources)
+# 人力資源 (Human Resources) (NOTE: This is obsolated by "Requirements HR")
 # ===================================================================
 
 
@@ -1062,3 +1062,76 @@ class Place(PlaceBase, BaseColumn):
 
 class PlaceCollection(CollectionBase):
     member: List[Place]
+
+# ===================================================================
+# 人力需求 (Requirements HR) (NOTE: This obsolates "Human Resources")
+# ===================================================================
+
+
+class RequirementsHrBase(BaseModel):
+    place_id: str
+    required_type: str
+    name: str
+    unit: str
+    require_count: NonNegativeInt
+    received_count: NonNegativeInt
+
+
+class RequirementsHrCreate(RequirementsHrBase):
+    required_type: RequirementsHrTypeEnum
+    received_count: Optional[NonNegativeInt] = 0
+
+
+class RequirementsHrPatch(BaseModel):
+    place_id: Optional[str] = None
+    required_type: Optional[RequirementsHrTypeEnum] = None
+    name: Optional[str] = None
+    unit: Optional[str] = None
+    require_count: Optional[NonNegativeInt] = None
+    received_count: Optional[NonNegativeInt] = None
+
+
+class RequirementsHr(RequirementsHrBase, BaseColumn):
+    class Config:
+        from_attributes = True
+
+
+class RequirementsHrCollection(CollectionBase):
+    member: List[RequirementsHr]
+
+
+# ===================================================================
+# 物資需求 (Requirements Supplies) (NOTE: This obsolates "Supplies")
+# ===================================================================
+
+
+class RequirementsSuppliesBase(BaseModel):
+    place_id: str
+    required_type: str
+    name: str
+    unit: str
+    require_count: NonNegativeInt
+    received_count: NonNegativeInt
+
+
+class RequirementsSuppliesCreate(RequirementsSuppliesBase):
+    required_type: RequirementsSuppliesTypeEnum
+    received_count: Optional[NonNegativeInt] = 0
+
+
+class RequirementsSuppliesPatch(BaseModel):
+    place_id: Optional[str] = None
+    required_type: Optional[RequirementsSuppliesTypeEnum] = None
+    name: Optional[str] = None
+    unit: Optional[str] = None
+    require_count: Optional[NonNegativeInt] = None
+    received_count: Optional[NonNegativeInt] = None
+
+
+class RequirementsSupplies(RequirementsSuppliesBase, BaseColumn):
+    class Config:
+        from_attributes = True
+
+
+class RequirementsSuppliesCollection(CollectionBase):
+    member: List[RequirementsSupplies]

@@ -18,6 +18,8 @@ from .routers import (
     mental_health_resources,
     places,
     reports,
+    requirements_hr,
+    requirements_supplies,
     restrooms,
     shelters,
     shower_stations,
@@ -27,7 +29,6 @@ from .routers import (
     volunteer_organizations,
     water_refill_stations,
     line,
-    test,  # Import the new test router
 )
 
 
@@ -38,9 +39,6 @@ async def lifespan(app: FastAPI):
     # Create database tables to prevent "relation does not exist" errors
     database.init_db()
     yield
-
-
-
 
 
 # --- 根據環境動態設定 Swagger UI 的伺服器 URL ---
@@ -76,9 +74,6 @@ app = FastAPI(
         "docExpansion": "none",  # 預設label收起
     },
 )
-
-# Add Middleware
-
 
 
 # ===================================================================
@@ -153,6 +148,8 @@ app.include_router(human_resources.router)
 app.include_router(medical_stations.router)
 app.include_router(mental_health_resources.router)
 app.include_router(places.router)
+app.include_router(requirements_hr.router)
+app.include_router(requirements_supplies.router)
 app.include_router(restrooms.router)
 app.include_router(shower_stations.router)
 app.include_router(water_refill_stations.router)
