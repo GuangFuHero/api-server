@@ -18,17 +18,24 @@ router = APIRouter(prefix="/line", tags=["OAuth2 (LINE)"], include_in_schema=Fal
 
 @router.get("/authorize", summary="取得LINE 授權入口")
 def authorize(
+        redirect_uri: str = Query(..., description="LINE OAuth 回呼 URL"),
         prompt: Optional[str] = Query(default=None),
         response_mode: Optional[str] = Query(default=None),
         disable_auto_login: Optional[bool] = Query(default=None),
         db: Session = Depends(get_db),
 ):
-    url = build_authorize_url(db, prompt=prompt, response_mode=response_mode, disable_auto_login=disable_auto_login)
+    url = build_authorize_url(
+        db,
+        redirect_uri=redirect_uri,
+        prompt=prompt,
+        response_mode=response_mode,
+        disable_auto_login=disable_auto_login
+    )
     return RedirectResponse(url)
 
 
-@router.get("/callback", summary="依照line授權碼(code)交換token", response_model=LineTokenResponse)
-async def callback(request: Request, db: Session = Depends(get_db)):
+@router.get("/token", summary="依照line授權碼(code)交換token", response_model=LineTokenResponse)
+async def token_exchange(request: Request, db: Session = Depends(get_db)):
     q = dict(request.query_params)
     if "error" in q:
         return JSONResponse(status_code=400, content={"error": q.get("error"), "error_description": q.get("error_description")})
@@ -51,7 +58,7 @@ async def token(
         if not code:
             raise HTTPException(status_code=400, detail="缺少 code")
         # 這裡無 state（DOT 習慣是在 authorize/callback 完成），若你要合併流程可改為在 body 帶 state
-        raise HTTPException(status_code=400, detail="authorization_code 請使用 /line/callback 完成交換")
+        raise HTTPException(status_code=400, detail="authorization_code 請使用 /line/token 完成交換")
     elif grant_type == "refresh_token":
         if not refresh_token:
             raise HTTPException(status_code=400, detail="缺少 refresh_token")
