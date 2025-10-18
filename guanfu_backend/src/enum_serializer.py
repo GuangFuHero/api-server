@@ -207,3 +207,10 @@ class RequirementsHrTypeEnum(enum.Enum):
     medical_care = "醫療照護"
     logistics = "後勤支援"
     other = "其他"
+
+
+class RequirementsSuppliesTypeEnum(enum.Enum):
+    food = "飲食"
+    medical = "醫療用品"
+    daily_necessities = "生活用品"
+    other = "其他"
