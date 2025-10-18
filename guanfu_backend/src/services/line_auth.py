@@ -51,6 +51,7 @@ def _code_challenge_s256(code_verifier: str) -> str:
 
 def build_authorize_url(
         db: Session,
+        redirect_uri: str,
         prompt: Optional[str] = None,
         response_mode: Optional[str] = None,
         disable_auto_login: Optional[bool] = None,
@@ -67,6 +68,7 @@ def build_authorize_url(
         state=state,
         nonce=nonce,
         code_verifier=code_verifier,
+        redirect_uri=redirect_uri,
         expires_at=datetime.utcnow() + timedelta(minutes=10),
     )
     db.add(sess)
@@ -75,7 +77,7 @@ def build_authorize_url(
     params = {
         "response_type": "code",
         "client_id": settings.LINE_CLIENT_ID,
-        "redirect_uri": settings.LINE_REDIRECT_URI,
+        "redirect_uri": redirect_uri,
         "state": state,
         "scope": settings.LINE_SCOPES,  # e.g. "openid profile email"
         "nonce": nonce,
@@ -109,7 +111,7 @@ async def exchange_token_authorization_code(db: Session, code: str, state: str) 
         data = {
             "grant_type": "authorization_code",
             "code": code,
-            "redirect_uri": settings.LINE_REDIRECT_URI,
+            "redirect_uri": sess.redirect_uri,
             "client_id": settings.LINE_CLIENT_ID,
             "client_secret": settings.LINE_CLIENT_SECRET,
             "code_verifier": sess.code_verifier,

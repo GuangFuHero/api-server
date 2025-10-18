@@ -19,6 +19,7 @@ from .routers import (
     places,
     reports,
     requirements_hr,
+    requirements_supplies,
     restrooms,
     shelters,
     shower_stations,
@@ -148,6 +149,7 @@ app.include_router(medical_stations.router)
 app.include_router(mental_health_resources.router)
 app.include_router(places.router)
 app.include_router(requirements_hr.router)
+app.include_router(requirements_supplies.router)
 app.include_router(restrooms.router)
 app.include_router(shower_stations.router)
 app.include_router(water_refill_stations.router)

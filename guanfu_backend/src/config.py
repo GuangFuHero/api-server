@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     # LINE OAuth2/OIDC
     LINE_CLIENT_ID: str
     LINE_CLIENT_SECRET: str
-    LINE_REDIRECT_URI: str
+    LINE_REDIRECT_URI: str = ""  # DEPRECATED: redirect_uri 現在由前端在 /authorize 請求中提供
     LINE_SCOPES: str = "profile openid email"
 
 
