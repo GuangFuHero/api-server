@@ -43,13 +43,13 @@
 
 <div align="center">
 
-|    技術層    | 使用技術         |
-| :----------: | :--------------- |
-|   **前端**   | Google Site      |
-|   **後端**   | Python + FastAPI |
-|  **資料庫**  | PostgreSQL       |
-|   **ORM**    | SQLAlchemy       |
-| **遷移工具** | Alembic          |
+|    技術層    | 使用技術       |
+| :----------: |:-----------|
+|   **前端**   | [React](https://github.com/GuangFuHero/guangfu-hero-web?tab=readme-ov-file)  |
+|   **後端**   | FastAPI    |
+|  **資料庫**  | PostgreSQL |
+|   **ORM**    | SQLAlchemy |
+| **遷移工具** | Alembic    |
 
 </div>
 
