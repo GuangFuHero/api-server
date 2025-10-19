@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     LINE_REDIRECT_URI: str = ""  # DEPRECATED: redirect_uri 現在由前端在 /authorize 請求中提供
     LINE_SCOPES: str = "profile openid email"
 
+    # Discord Webhook
+    DISCORD_WEBHOOK_URL: str = ""
+
 
 # 建立一個全域的 settings 實例供整個專案引用
 settings = Settings()
