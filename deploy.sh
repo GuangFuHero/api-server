@@ -81,7 +81,7 @@ docker compose ps
 # Check backend health
 echo "Checking backend health..."
 for i in {1..30}; do
-    if curl -f http://localhost:8000/docs >/dev/null 2>&1; then
+    if curl -f http://localhost:8080/docs >/dev/null 2>&1; then
         echo "✓ Backend service is ready!"
         break
     fi
@@ -102,5 +102,5 @@ docker compose logs --tail=20 backend
 
 echo "=========================================="
 echo "Deployment completed! Version: ${VERSION}"
-echo "Backend: http://localhost:8000"
+echo "Backend: http://localhost:8080"
 echo "=========================================="

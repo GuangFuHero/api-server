@@ -90,4 +90,4 @@ jobs:
           script: |
             cd /home/deploy/api-server/guanfu_backend
             docker compose ps
-            curl -f http://localhost:8000/docs || echo "Warning: Backend health check failed"
+            curl -f http://localhost:8080/docs || echo "Warning: Backend health check failed"

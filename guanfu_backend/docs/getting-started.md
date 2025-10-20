@@ -21,32 +21,25 @@ brew install --cask docker
 cd guanfu_backend
 
 # 3. 複製環境變數檔案（使用預設值）
-cp .env.example .env.dev
-# 編輯 .env.dev 填入資料庫設定
+cp .env.example .env
 
-# 啟動資料庫與開發伺服器
-docker-compose --env-file .env.dev up -d postgres
-uvicorn src.main:app --reload
-```
-
-訪問 http://localhost:8080/docs 查看 API 文件。
-
-# 4. 啟動所有服務
-docker compose --env-file .env.dev up -d --build
+# 4. 啟動所有服務（資料庫 + 後端）
+docker compose up -d --build
 
 # 5. 查看服務狀態
 docker compose ps
 ```
 
-訪問 <http://localhost:8080/docs> 查看 API 文件。
+訪問 http://localhost:8080/docs 查看 API 文件。
 
 > **提示**：`.env.example` 已包含可直接使用的預設值，適合本地開發。
 >
-> **何時需要修改 `.env.dev`：**
+> **何時需要修改 `.env`：**
 >
 > - 生產環境部署（請更換為強密碼）
 > - 連接外部資料庫
 > - 需要自訂應用程式設定
+> - 啟用 LINE 登入或 Discord 通知功能
 
 **停止服務：**
 
@@ -69,14 +62,14 @@ brew install --cask docker
 
 ```bash
 cd guanfu_backend
-cp .env.example .env.dev
+cp .env.example .env
 ```
 
 `.env.example` 已包含所有必要的設定和預設值，可直接使用。
 
 **進階設定**（選用）：
 
-如需自訂資料庫設定，可編輯 `.env.dev` 檔案：
+如需自訂資料庫設定，可編輯 `.env` 檔案：
 
 ```env
 # PostgreSQL 容器設定
@@ -95,7 +88,7 @@ DATABASE_URL=postgresql://自訂使用者名稱:自訂密碼@postgres:5432/資�
 
 **LINE 登入設定**（選用）：
 
-如需啟用 LINE 登入功能，需在 `.env.dev` 中設定以下環境變數：
+如需啟用 LINE 登入功能，需在 `.env` 中設定以下環境變數：
 
 ```env
 # LINE 登入設定
@@ -112,11 +105,28 @@ LINE_REDIRECT_URI=*/line/token (已棄用，改由前端參數)
 5. 設定 Callback URL（例如：`http://localhost:8080/line/callback`）
 6. 取得 code & state 換取token (例如：`http://localhost:8080/line/token`）
 
+**Discord Webhook 設定**（選用）：
+
+如需啟用 Discord 通知功能，需在 `.env` 中設定以下環境變數：
+
+```env
+# Discord Webhook 設定
+DISCORD_WEBHOOK_URL=你的 Discord Webhook URL
+```
+
+取得 Discord Webhook URL 的步驟：
+1. 進入你的 Discord 伺服器
+2. 點選伺服器設定（齒輪圖示）
+3. 選擇「整合」(Integrations)
+4. 點選「建立 Webhook」或選擇現有的 Webhook
+5. 設定 Webhook 名稱、頻道和圖示
+6. 複製 Webhook URL 並貼到 `.env` 中
+
 ### 3. 啟動服務
 
 ```bash
 # 建置並啟動所有服務
-docker compose --env-file .env.dev up -d --build
+docker compose up -d --build
 
 # 查看服務狀態
 docker compose ps

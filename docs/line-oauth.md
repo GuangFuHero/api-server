@@ -321,18 +321,18 @@ alembic upgrade head
 
 ```bash
 # 1. 取得授權 URL (會重導向)
-curl -L "http://localhost:8000/line/authorize?redirect_uri=http://localhost:3000/callback"
+curl -L "http://localhost:8080/line/authorize?redirect_uri=http://localhost:3000/callback"
 
 # 2. 使用者完成 LINE 授權後，使用回傳的 code 和 state
-curl "http://localhost:8000/line/token?code=xxx&state=xxx"
+curl "http://localhost:8080/line/token?code=xxx&state=xxx"
 
 # 3. 刷新 token
-curl -X POST "http://localhost:8000/line/refresh_token" \
+curl -X POST "http://localhost:8080/line/refresh_token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=refresh_token&refresh_token=xxx"
 
 # 4. 撤銷 token
-curl -X POST "http://localhost:8000/line/revoke" \
+curl -X POST "http://localhost:8080/line/revoke" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "access_token=xxx"
 ```

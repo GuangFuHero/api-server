@@ -216,7 +216,7 @@ async def create_human_resource(
 **基本測試：**
 
 ```bash
-curl -X POST http://localhost:8000/human_resources \
+curl -X POST http://localhost:8080/human_resources \
   -H "Content-Type: application/json" \
   -d '{
     "org": "測試組織",
@@ -237,7 +237,7 @@ curl -X POST http://localhost:8000/human_resources \
 **完整資料測試：**
 
 ```bash
-curl -X POST http://localhost:8000/human_resources \
+curl -X POST http://localhost:8080/human_resources \
   -H "Content-Type: application/json" \
   -d '{
     "org": "測試志工組織ABC",
@@ -436,7 +436,7 @@ invalid input syntax for type bigint: "2025-10-16T17:26:28.110000Z"
 
 - [Discord Webhook 官方文件](https://discord.com/developers/docs/resources/webhook)
 - [FastAPI 背景任務](https://fastapi.tiangolo.com/tutorial/background-tasks/)
-- [專案 API 文件](http://localhost:8000/docs)（開發環境）
+- [專案 API 文件](http://localhost:8080/docs)（開發環境）
 
 ---
 

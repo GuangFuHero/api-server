@@ -1136,4 +1136,3 @@ class RequirementsSupplies(RequirementsSuppliesBase, BaseColumn):
 
 class RequirementsSuppliesCollection(CollectionBase):
     member: List[RequirementsSupplies]
-

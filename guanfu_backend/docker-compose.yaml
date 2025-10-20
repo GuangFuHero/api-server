@@ -39,7 +39,7 @@ services:
     volumes:
       - .env:/app/src/.env:ro
     ports:
-      - "8000:8080"
+      - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
