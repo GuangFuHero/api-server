@@ -2,6 +2,7 @@ import httpx
 from ..config import settings
 import json
 
+
 async def send_discord_message(content: str, embed_data: dict | None = None):
     """
     Sends a message to a Discord webhook.
@@ -19,7 +20,7 @@ async def send_discord_message(content: str, embed_data: dict | None = None):
         message["embeds"] = [
             {
                 "description": f"```json\n{json.dumps(embed_data, indent=2, ensure_ascii=False)}\n```",
-                "color": 5814783  # A nice blue color
+                "color": 5814783,  # A nice blue color
             }
         ]
 

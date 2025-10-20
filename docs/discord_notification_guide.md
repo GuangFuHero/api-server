@@ -19,9 +19,11 @@
 本專案已整合 Discord Webhook 通知功能，當有新的人力需求建立時，系統會自動發送通知到指定的 Discord 頻道。
 
 **已整合的 Endpoint:**
+
 - `POST /human_resources` - 建立新的人力需求時自動發送通知
 
 **實現位置:**
+
 - 通知服務：`src/services/discord_webhook.py`
 - 整合範例：`src/routers/human_resources.py:90-93`
 
@@ -40,6 +42,7 @@
 7. 點擊「複製 Webhook URL」
 
 **Webhook URL 格式範例：**
+
 ```
 https://discordapp.com/api/webhooks/1234567890123456789/abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOP
 ```
@@ -148,6 +151,7 @@ async def create_something(data: YourSchema, db: Session = Depends(get_db)):
 ```
 
 **優點：**
+
 - ✅ 不阻塞 API 回應
 - ✅ 提升使用者體驗
 - ✅ 即使通知失敗也不影響主要業務邏輯
@@ -259,6 +263,7 @@ curl -X POST http://localhost:8000/human_resources \
 ```
 
 **預期結果：**
+
 - HTTP 狀態碼：`201 Created`
 - API 回應包含創建的資源資料
 - Discord 頻道收到新的通知訊息
@@ -335,10 +340,12 @@ assignment_notes: 指派備註 (string)
 ### 🔐 安全性建議
 
 1. **不要將 Webhook URL 提交到版控系統**
+
    - 將 `.env` 添加到 `.gitignore`
    - 使用環境變數管理敏感資訊
 
 2. **定期輪換 Webhook**
+
    - 如果 URL 洩露，立即在 Discord 中重新生成
 
 3. **限制訊息頻率**
@@ -354,6 +361,7 @@ assignment_notes: 指派備註 (string)
 **檢查清單：**
 
 1. 確認環境變數已設置：
+
    ```bash
    # 在容器中檢查
    docker exec guanfu-backend printenv | grep DISCORD_WEBHOOK_URL
@@ -364,6 +372,7 @@ assignment_notes: 指派備註 (string)
 3. 檢查 Discord 頻道權限
 
 4. 查看應用程式日誌：
+
    ```bash
    docker logs guanfu-backend --tail 50 | grep -i discord
    ```
@@ -371,11 +380,13 @@ assignment_notes: 指派備註 (string)
 ### 問題 2: 500 錯誤 - 時間欄位錯誤
 
 **錯誤訊息：**
+
 ```
 invalid input syntax for type bigint: "2025-10-16T17:26:28.110000Z"
 ```
 
 **解決方案：**
+
 - 不要在請求中傳入 `shift_start_ts`、`shift_end_ts`、`assignment_timestamp`
 - 讓系統自動填入預設值
 
@@ -384,31 +395,39 @@ invalid input syntax for type bigint: "2025-10-16T17:26:28.110000Z"
 **常見原因：**
 
 1. **缺少必填欄位**
+
    ```json
-   {"address": ["Field required"]}
+   { "address": ["Field required"] }
    ```
+
    解決：確保所有必填欄位都有提供
 
 2. **錯誤的資料型別**
+
    ```json
-   {"headcount_need": ["Input should be a valid integer"]}
+   { "headcount_need": ["Input should be a valid integer"] }
    ```
+
    解決：檢查資料型別是否正確
 
 3. **錯誤的 Enum 值**
+
    ```json
-   {"status": ["Input should be 'active', 'completed' or 'cancelled'"]}
+   { "status": ["Input should be 'active', 'completed' or 'cancelled'"] }
    ```
+
    解決：使用有效的 Enum 值
 
 ### 問題 4: 400 錯誤 - 業務邏輯驗證失敗
 
 **錯誤訊息：**
+
 ```json
-{"detail": "headcount_got must be less than or equal to headcount_need."}
+{ "detail": "headcount_got must be less than or equal to headcount_need." }
 ```
 
 **解決方案：**
+
 - 確保 `headcount_got` <= `headcount_need`
 
 ---
@@ -423,8 +442,8 @@ invalid input syntax for type bigint: "2025-10-16T17:26:28.110000Z"
 
 ## 更新記錄
 
-| 日期 | 版本 | 說明 |
-|------|------|------|
+| 日期       | 版本  | 說明     |
+| ---------- | ----- | -------- |
 | 2025-10-17 | 1.0.0 | 初版發布 |
 
 ---
