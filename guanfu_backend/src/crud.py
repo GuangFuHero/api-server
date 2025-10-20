@@ -118,6 +118,48 @@ def create_with_input(db: Session, model: Type[ModelType], obj_in: CreateSchemaT
     """
     payload = normalize_payload_dict(obj_in.model_dump(mode="json"))
     extra = normalize_payload_dict(kwargs) if kwargs else {}
+
+    # Ensure created_at and updated_at are set if not present, to satisfy nullable=False constraint
+    if "created_at" not in payload and "created_at" not in extra:
+        extra["created_at"] = int(datetime.now(timezone.utc).timestamp())
+    if "updated_at" not in payload and "updated_at" not in extra:
+        extra["updated_at"] = int(datetime.now(timezone.utc).timestamp())
+
+    if model == models.HumanResource:
+        jsonb_fields = ['skills', 'certifications', 'language_requirements']
+        for field in jsonb_fields:
+            if field in payload and payload[field] is not None:
+                # Manually cast to JSONB for specific fields to override model's ARRAY type
+                json_string = json.dumps(payload[field])
+                payload[field] = text(f"\'{json_string}\'::jsonb")
+
+        # Set default values for required fields that might be missing
+        if "experience_level" not in payload or payload["experience_level"] is None:
+            payload["experience_level"] = "level_1"
+
+        # Convert datetime strings to UNIX timestamps (database expects bigint)
+        timestamp_fields = ["shift_start_ts", "shift_end_ts", "assignment_timestamp"]
+        for field in timestamp_fields:
+            if field in payload and payload[field] is not None:
+                value = payload[field]
+                if isinstance(value, str):
+                    # Parse ISO datetime string to UNIX timestamp
+                    # Handle both formats: "2024-10-19T11:00:00Z" and "2024-10-19T11:00:00+00:00"
+                    dt_str = value.replace('Z', '+00:00') if value.endswith('Z') else value
+                    from datetime import datetime as dt_class
+                    dt = dt_class.fromisoformat(dt_str)
+                    payload[field] = int(dt.timestamp())
+                elif not isinstance(value, int):
+                    # Handle any other datetime-like objects
+                    payload[field] = int(value.timestamp()) if hasattr(value, 'timestamp') else value
+
+        # Set default timestamps if not provided (as Unix timestamp integers)
+        now_timestamp = int(datetime.now(timezone.utc).timestamp())
+        if "shift_start_ts" not in payload or payload["shift_start_ts"] is None:
+            payload["shift_start_ts"] = now_timestamp
+        if "shift_end_ts" not in payload or payload["shift_end_ts"] is None:
+            payload["shift_end_ts"] = now_timestamp
+
     db_obj = model(**payload, **extra)
     db.add(db_obj)
     db.commit()
@@ -134,7 +176,11 @@ def update(db: Session, db_obj: ModelType, obj_in: UpdateSchemaType) -> ModelTyp
     update_data = normalize_payload_dict(obj_in.model_dump(exclude_unset=True))
     # update time
     if "updated_at" in db_obj.__table__.c:
-        setattr(db_obj, "updated_at", datetime.now(timezone.utc))
+        # Check if the model uses bigint for timestamps (like HumanResource and Supply)
+        if type(db_obj) in (models.HumanResource, models.Supply):
+            setattr(db_obj, "updated_at", int(datetime.now(timezone.utc).timestamp()))
+        else:
+            setattr(db_obj, "updated_at", datetime.now(timezone.utc))
     for field, value in update_data.items():
         setattr(db_obj, field, value)
     db.add(db_obj)
