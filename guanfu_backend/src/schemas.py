@@ -17,10 +17,13 @@ class BaseColumn(BaseModel):
     @field_validator("created_at", "updated_at", mode="before")
     @classmethod
     def _coerce_epoch(cls, v):
+        if isinstance(v, int):
+            return v
         if isinstance(v, datetime):
             # naive: UTC+8
             if v.tzinfo is None:
                 v = v.replace(tzinfo=timezone(timedelta(hours=8)))
+            return int(v.timestamp())
         return int(v.timestamp())
 
 
@@ -1060,6 +1063,7 @@ class Place(PlaceBase, BaseColumn):
 class PlaceCollection(CollectionBase):
     member: List[Place]
 
+
 # ===================================================================
 # 人力需求 (Requirements HR) (NOTE: This obsolates "Human Resources")
 # ===================================================================
@@ -1132,3 +1136,4 @@ class RequirementsSupplies(RequirementsSuppliesBase, BaseColumn):
 
 class RequirementsSuppliesCollection(CollectionBase):
     member: List[RequirementsSupplies]
+

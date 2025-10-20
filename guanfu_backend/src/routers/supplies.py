@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Security, Request
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List, Literal
+import asyncio
+
 from .. import crud, models, schemas
 from ..crud import (
     get_full_supply,
@@ -10,6 +12,7 @@ from ..crud import (
 )
 from ..database import get_db
 from ..api_key import require_modify_api_key
+from ..services.discord_webhook import send_discord_message
 
 router = APIRouter(
     prefix="/supplies",
@@ -60,12 +63,21 @@ def list_supplies(
 @router.post(
     "", response_model=schemas.SupplyWithPin, status_code=201, summary="建立供應單"
 )
-def create_supply(supply_in: schemas.SupplyCreate, db: Session = Depends(get_db)):
+async def create_supply(supply_in: schemas.SupplyCreate, db: Session = Depends(get_db)):
     """
     建立供應單 (注意：同時建立 supply_items 的邏輯需在 crud 中客製化)
     """
     # This requires custom logic in crud.py to handle the nested `supplies` object
-    return crud.create_supply_with_items(db, obj_in=supply_in)
+    created_supply = crud.create_supply_with_items(db, obj_in=supply_in)
+
+    # Send Discord notification in background
+    message_content = "新的物資供應已建立 📦"
+    embed_data = supply_in.model_dump(mode="json")
+    asyncio.create_task(
+        send_discord_message(content=message_content, embed_data=embed_data)
+    )
+
+    return created_supply
 
 
 # 在 patch_supply 禁止更新已全部到貨的供應單

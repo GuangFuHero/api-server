@@ -255,7 +255,7 @@ guanfu_backend/
 ### API 設計規範
 
 - RESTful API 設計原則
-- 使用適當的 HTTP 方法 (GET, POST, PUT, DELETE)
+- 使用適當的 HTTP 方法 (GET, POST, PUT, DELETE, PATCH)
 - 統一的錯誤回應格式
 - API 版本控制（如需要）
 
@@ -598,7 +598,6 @@ git checkout v1.1.0
 ## 取得協助
 
 - 查看 [文件目錄](./guanfu_backend/docs/)
-- 查看 [開發工作流程詳細說明](./guanfu_backend/docs/development-workflow.md)
 - 在 GitHub Issues 提出問題
 - 聯繫專案維護者
 
