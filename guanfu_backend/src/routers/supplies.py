@@ -12,7 +12,11 @@ from ..crud import (
 )
 from ..database import get_db
 from ..api_key import require_modify_api_key
-from ..services.discord_webhook import send_discord_message
+from ..services.discord_webhook import (
+    send_discord_message,
+    format_supply_notification,
+    format_supply_patch_notification,
+)
 
 router = APIRouter(
     prefix="/supplies",
@@ -63,19 +67,36 @@ def list_supplies(
 @router.post(
     "", response_model=schemas.SupplyWithPin, status_code=201, summary="建立供應單"
 )
-async def create_supply(supply_in: schemas.SupplyCreate, db: Session = Depends(get_db)):
+async def create_supply(
+    supply_in: schemas.SupplyCreate,
+    request: Request,
+    db: Session = Depends(get_db)
+):
     """
     建立供應單 (注意：同時建立 supply_items 的邏輯需在 crud 中客製化)
     """
     # This requires custom logic in crud.py to handle the nested `supplies` object
     created_supply = crud.create_supply_with_items(db, obj_in=supply_in)
 
-    # Send Discord notification in background
-    message_content = "新的物資供應已建立 📦"
-    embed_data = supply_in.model_dump(mode="json")
-    asyncio.create_task(
-        send_discord_message(content=message_content, embed_data=embed_data)
+    # 取得真實客戶端 IP（考慮反向代理）
+    client_ip = (
+        request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+        or request.headers.get("x-real-ip", "")
+        or (request.client.host if request.client else "unknown")
     )
+    user_agent = request.headers.get("user-agent", "unknown")
+
+    # 格式化通知訊息
+    message_content = format_supply_notification(
+        supply_data=supply_in.model_dump(mode="json"),
+        supply_id=created_supply.id,
+        created_at=created_supply.created_at,
+        client_ip=client_ip,
+        user_agent=user_agent,
+    )
+
+    # Send Discord notification in background
+    asyncio.create_task(send_discord_message(content=message_content))
 
     return created_supply
 
@@ -88,7 +109,12 @@ async def create_supply(supply_in: schemas.SupplyCreate, db: Session = Depends(g
     summary="更新供應單",
     # dependencies=[Security(require_modify_api_key)],
 )
-def patch_supply(id: str, supply_in: schemas.SupplyPatch, db: Session = Depends(get_db)):
+async def patch_supply(
+    id: str,
+    supply_in: schemas.SupplyPatch,
+    request: Request,
+    db: Session = Depends(get_db)
+):
     db_supply = crud.get_by_id(db, models.Supply, id)
     if db_supply is None:
         raise HTTPException(status_code=404, detail="Supply not found")
@@ -102,7 +128,32 @@ def patch_supply(id: str, supply_in: schemas.SupplyPatch, db: Session = Depends(
     # if db_supply.valid_pin and db_supply.valid_pin != supply_in.valid_pin:
     #     raise HTTPException(status_code=400, detail="The PIN you entered is incorrect.")
 
-    return crud.update(db, db_obj=db_supply, obj_in=supply_in)
+    # 更新供應單
+    updated_supply = crud.update(db, db_obj=db_supply, obj_in=supply_in)
+
+    # 取得真實客戶端 IP（考慮反向代理）
+    client_ip = (
+        request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+        or request.headers.get("x-real-ip", "")
+        or (request.client.host if request.client else "unknown")
+    )
+    user_agent = request.headers.get("user-agent", "unknown")
+
+    # 取得更新的欄位
+    updated_fields = supply_in.model_dump(exclude_unset=True)
+
+    # 格式化並發送通知
+    message_content = format_supply_patch_notification(
+        supply_id=id,
+        updated_fields=updated_fields,
+        client_ip=client_ip,
+        user_agent=user_agent,
+    )
+
+    # Send notification to Discord in the background
+    asyncio.create_task(send_discord_message(content=message_content))
+
+    return updated_supply
 
 
 @router.get("/{id}", response_model=schemas.Supply, summary="取得特定供應單")
