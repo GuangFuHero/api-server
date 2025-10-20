@@ -72,8 +72,10 @@ async def create_supply(supply_in: schemas.SupplyCreate, db: Session = Depends(g
 
     # Send Discord notification in background
     message_content = "新的物資供應已建立 📦"
-    embed_data = supply_in.model_dump(mode='json')
-    asyncio.create_task(send_discord_message(content=message_content, embed_data=embed_data))
+    embed_data = supply_in.model_dump(mode="json")
+    asyncio.create_task(
+        send_discord_message(content=message_content, embed_data=embed_data)
+    )
 
     return created_supply
 

@@ -1063,6 +1063,7 @@ class Place(PlaceBase, BaseColumn):
 class PlaceCollection(CollectionBase):
     member: List[Place]
 
+
 # ===================================================================
 # 人力需求 (Requirements HR) (NOTE: This obsolates "Human Resources")
 # ===================================================================
@@ -1135,3 +1136,4 @@ class RequirementsSupplies(RequirementsSuppliesBase, BaseColumn):
 
 class RequirementsSuppliesCollection(CollectionBase):
     member: List[RequirementsSupplies]
+
