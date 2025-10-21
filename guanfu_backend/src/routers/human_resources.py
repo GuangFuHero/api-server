@@ -22,10 +22,13 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=schemas.HumanResourceCollection, summary="取得人力需求清單")
+@router.get(
+    "", response_model=schemas.HumanResourceCollection, summary="取得人力需求清單"
+)
 def list_human_resources(
     request: Request,
     status: Optional[HumanResourceStatusEnum] = Query(None),
+    q_role: Optional[str] = Query(None),
     role_status: Optional[HumanResourceRoleStatusEnum] = Query(None),
     role_type: Optional[HumanResourceRoleTypeEnum] = Query(None),
     limit: int = Query(20, ge=1, le=200),
@@ -46,15 +49,33 @@ def list_human_resources(
         "role_type": role_type,
     }
 
-    order_by = None
+    normalized_filters = crud.normalize_filters_dict(filters)
+    query = db.query(models.HumanResource)
+    if normalized_filters:
+        query = query.filter_by(**normalized_filters)
+
+    if q_role:
+        keywords = [kw.strip() for kw in q_role.split(",") if kw.strip()]
+        if keywords:
+            keyword_clauses = []
+            for kw in keywords:
+                pattern = f"%{kw}%"
+                keyword_clauses.append(
+                    or_(
+                        models.HumanResource.assignment_notes.ilike(pattern),
+                        models.HumanResource.role_name.ilike(pattern),
+                        models.HumanResource.role_type.ilike(pattern),
+                    )
+                )
+            query = query.filter(or_(*keyword_clauses))
+
     if order_by_time == "asc":
         query = query.order_by(models.HumanResource.created_at.asc())
     elif order_by_time == "desc":
-        order_by = models.HumanResource.created_at.desc()
+        query = query.order_by(models.HumanResource.created_at.desc())
 
-    resources = crud.get_multi(
-        db, models.HumanResource, skip=offset, limit=limit, order_by=order_by, **filters
-    )
+    total = query.count()
+    resources = query.offset(offset).limit(limit).all()
     resources = crud.mask_id_if_field_equals(resources, "status", "completed")
     next_link = crud.build_next_link(request, limit=limit, offset=offset, total=total)
     return {
@@ -80,7 +101,8 @@ async def create_human_resource(
     """
     if resource_in.headcount_got > resource_in.headcount_need:
         raise HTTPException(
-            status_code=400, detail="headcount_got must be less than or equal to headcount_need."
+            status_code=400,
+            detail="headcount_got must be less than or equal to headcount_need.",
         )
 
     created_resource = crud.create_with_input(
@@ -89,8 +111,10 @@ async def create_human_resource(
 
     # Send notification to Discord in the background
     message_content = "新的志工人力需求已建立 ✨"
-    embed_data = resource_in.model_dump(mode='json')
-    asyncio.create_task(send_discord_message(content=message_content, embed_data=embed_data))
+    embed_data = resource_in.model_dump(mode="json")
+    asyncio.create_task(
+        send_discord_message(content=message_content, embed_data=embed_data)
+    )
 
     return created_resource
 
@@ -148,6 +172,7 @@ def patch_human_resource(
         )
         if headcount_got > headcount_need:
             raise HTTPException(
-                status_code=400, detail="headcount_got must be less than or equal to headcount_need."
+                status_code=400,
+                detail="headcount_got must be less than or equal to headcount_need.",
             )
     return crud.update(db, db_obj=db_resource, obj_in=resource_in)
