@@ -4,6 +4,7 @@
 #   ENVIRONMENT=dev DB_PASS=xxx API_KEY_LIST=key1,key2 \
 #   LINE_CLIENT_ID=your_line_client_id \
 #   LINE_CLIENT_SECRET=your_line_client_secret \
+#   DISCORD_WEBHOOK_URL=your_discord_webhook_url \
 #   ./setup-env.sh
 #
 # Note: LINE_REDIRECT_URI 已棄用，現在由前端在 API 請求中提供
@@ -22,6 +23,9 @@ LINE_CLIENT_SECRET=${LINE_CLIENT_SECRET:-""}
 # LINE_REDIRECT_URI (DEPRECATED: 現在由前端在 /line/authorize 請求中提供)
 # 保留此設定以向下相容，但新的實作不再使用環境變數中的值
 LINE_REDIRECT_URI=${LINE_REDIRECT_URI:-""}
+
+# Discord Webhook parameters
+DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-""}
 
 # Database settings
 DB_USER="guangfu"
@@ -78,6 +82,11 @@ DATABASE_URL=${DATABASE_URL}
 LINE_CLIENT_ID=${LINE_CLIENT_ID}
 LINE_CLIENT_SECRET=${LINE_CLIENT_SECRET}
 LINE_REDIRECT_URI=${LINE_REDIRECT_URI}
+
+# ----------------------------------------------------------------------------
+# Discord Webhook Settings
+# ----------------------------------------------------------------------------
+DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
 EOF
 
 # Verify .env file was created
