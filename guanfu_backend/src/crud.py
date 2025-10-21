@@ -118,32 +118,6 @@ def create_with_input(db: Session, model: Type[ModelType], obj_in: CreateSchemaT
     """
     payload = normalize_payload_dict(obj_in.model_dump(mode="json"))
     extra = normalize_payload_dict(kwargs) if kwargs else {}
-
-    # Ensure created_at and updated_at are set if not present, to satisfy nullable=False constraint
-    if "created_at" not in payload and "created_at" not in extra:
-        extra["created_at"] = int(datetime.now(timezone.utc).timestamp())
-    if "updated_at" not in payload and "updated_at" not in extra:
-        extra["updated_at"] = int(datetime.now(timezone.utc).timestamp())
-
-    if model == models.HumanResource:
-        jsonb_fields = ['skills', 'certifications', 'language_requirements']
-        for field in jsonb_fields:
-            if field in payload and payload[field] is not None:
-                # Manually cast to JSONB for specific fields to override model's ARRAY type
-                json_string = json.dumps(payload[field])
-                payload[field] = text(f"\'{json_string}\'::jsonb")
-
-        # Set default values for required fields that might be missing
-        if "experience_level" not in payload or payload["experience_level"] is None:
-            payload["experience_level"] = "level_1"
-
-        # Set default timestamps if not provided (as Unix timestamp integers)
-        now_timestamp = int(datetime.now(timezone.utc).timestamp())
-        if "shift_start_ts" not in payload or payload["shift_start_ts"] is None:
-            payload["shift_start_ts"] = now_timestamp
-        if "shift_end_ts" not in payload or payload["shift_end_ts"] is None:
-            payload["shift_end_ts"] = now_timestamp
-
     db_obj = model(**payload, **extra)
     db.add(db_obj)
     db.commit()
