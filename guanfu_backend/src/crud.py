@@ -159,14 +159,14 @@ def create_supply_with_items(db: Session, obj_in: SupplyCreate) -> models.Supply
         supply_data_raw = obj_in.model_dump(exclude={"supplies"}, exclude_unset=True)
         supply_data = normalize_payload_dict(supply_data_raw)  # Enum to value
 
-        # 設置必填的時間欄位（Supply 使用 bigint 存儲時間戳）
-        now_timestamp = int(datetime.now(timezone.utc).timestamp())
+        # 設置必填的時間欄位（Supply 使用 DateTime 存儲時間）
+        now = datetime.now(timezone.utc)
         db_supply = models.Supply(
             **supply_data,
             valid_pin=generate_pin(),
             spam_warn=False,
-            created_at=now_timestamp,
-            updated_at=now_timestamp
+            created_at=now,
+            updated_at=now
         )
         db.add(db_supply)
         db.flush()  # 先拿到 db_supply.id 供 item 關聯
