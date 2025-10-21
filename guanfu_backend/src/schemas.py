@@ -164,7 +164,7 @@ class MedicalStationBase(BaseModel):
 
 # Todo:需要協助補上驗證規則 like phone and link
 class MedicalStationCreate(MedicalStationBase):
-    str: MedicalStationStatusEnum
+    status: MedicalStationStatusEnum
 
 
 class MedicalStationPatch(BaseModel):
