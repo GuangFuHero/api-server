@@ -118,32 +118,6 @@ def create_with_input(db: Session, model: Type[ModelType], obj_in: CreateSchemaT
     """
     payload = normalize_payload_dict(obj_in.model_dump(mode="json"))
     extra = normalize_payload_dict(kwargs) if kwargs else {}
-
-    # Ensure created_at and updated_at are set if not present, to satisfy nullable=False constraint
-    if "created_at" not in payload and "created_at" not in extra:
-        extra["created_at"] = int(datetime.now(timezone.utc).timestamp())
-    if "updated_at" not in payload and "updated_at" not in extra:
-        extra["updated_at"] = int(datetime.now(timezone.utc).timestamp())
-
-    if model == models.HumanResource:
-        jsonb_fields = ['skills', 'certifications', 'language_requirements']
-        for field in jsonb_fields:
-            if field in payload and payload[field] is not None:
-                # Manually cast to JSONB for specific fields to override model's ARRAY type
-                json_string = json.dumps(payload[field])
-                payload[field] = text(f"\'{json_string}\'::jsonb")
-
-        # Set default values for required fields that might be missing
-        if "experience_level" not in payload or payload["experience_level"] is None:
-            payload["experience_level"] = "level_1"
-
-        # Set default timestamps if not provided (as Unix timestamp integers)
-        now_timestamp = int(datetime.now(timezone.utc).timestamp())
-        if "shift_start_ts" not in payload or payload["shift_start_ts"] is None:
-            payload["shift_start_ts"] = now_timestamp
-        if "shift_end_ts" not in payload or payload["shift_end_ts"] is None:
-            payload["shift_end_ts"] = now_timestamp
-
     db_obj = model(**payload, **extra)
     db.add(db_obj)
     db.commit()
@@ -185,14 +159,14 @@ def create_supply_with_items(db: Session, obj_in: SupplyCreate) -> models.Supply
         supply_data_raw = obj_in.model_dump(exclude={"supplies"}, exclude_unset=True)
         supply_data = normalize_payload_dict(supply_data_raw)  # Enum to value
 
-        # 設置必填的時間欄位（Supply 使用 bigint 存儲時間戳）
-        now_timestamp = int(datetime.now(timezone.utc).timestamp())
+        # 設置必填的時間欄位（Supply 使用 DateTime 存儲時間）
+        now = datetime.now(timezone.utc)
         db_supply = models.Supply(
             **supply_data,
             valid_pin=generate_pin(),
             spam_warn=False,
-            created_at=now_timestamp,
-            updated_at=now_timestamp
+            created_at=now,
+            updated_at=now
         )
         db.add(db_supply)
         db.flush()  # 先拿到 db_supply.id 供 item 關聯
