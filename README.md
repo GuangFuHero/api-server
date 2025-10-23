@@ -9,7 +9,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Alembic](https://img.shields.io/badge/Alembic-6BA81E?style=for-the-badge&logo=python&logoColor=white)](https://alembic.sqlalchemy.org/)
 
-[🌐 官網](https://gf250923.org/map) • [📚 API 文件](https://github.com/GuangFuHero/api-server/blob/main/table_spec.md) • [🎨 UI 設計](https://www.figma.com/design/3HmmJtwok42obsXH93s21b/%E8%8A%B1%E8%93%AE%E5%85%89%E5%BE%A9%E5%BE%A9%E5%8E%9F%E4%B9%8B%E8%B7%AF%EF%BC%81?node-id=162-553&t=Fw2L65c6BsMguQRh-0)
+[🌐 官網](https://gf250923.org/map) • [📚 API 文件](https://github.com/GuangFuHero/api-server/blob/main/table_spec.md) • [🎨 UI 設計](https://www.figma.com/design/3HmmJtwok42obsXH93s21b/%E8%8A%B1%E8%93%AE%E5%85%89%E5%BE%A9%E5%BE%A9%E5%8E%9F%E4%B9%8B%E8%B7%AF%EF%BC%81?node-id=2741-32338&t=TqVaMwxEOCVTRBSD-1)
 
 </div>
 
@@ -33,7 +33,7 @@
 | 項目 | 說明          |                                                                                        連結                                                                                         |
 | :--: | :------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 |  🌐  | **官網**      |                                                                      [gf250923.org](https://gf250923.org/map)                                                                       |
-|  🎨  | **UI 設計稿** | [Figma](https://www.figma.com/design/3HmmJtwok42obsXH93s21b/%E8%8A%B1%E8%93%AE%E5%85%89%E5%BE%A9%E5%BE%A9%E5%8E%9F%E4%B9%8B%E8%B7%AF%EF%BC%81?node-id=162-553&t=Fw2L65c6BsMguQRh-0) |
+|  🎨  | **UI 設計稿** | [Figma](https://www.figma.com/design/3HmmJtwok42obsXH93s21b/%E8%8A%B1%E8%93%AE%E5%85%89%E5%BE%A9%E5%BE%A9%E5%8E%9F%E4%B9%8B%E8%B7%AF%EF%BC%81?node-id=2741-32338&t=TqVaMwxEOCVTRBSD-1) |
 |  📚  | **API 規格**  |                                                 [table_spec.md](https://github.com/GuangFuHero/api-server/blob/main/table_spec.md)                                                  |
 |  📊  | **資料來源**  |                                                                                  Google Sheet 副本                                                                                  |
 
@@ -104,6 +104,7 @@ uv run uvicorn src.main:app --reload --port 8080
 | 📊 [API 規格](table_spec.md)                              | 完整的 API 端點與資料表規格               |
 | 🔀 [Git Flow 圖示](docs/git-flow-diagram.md)              | 專案的 Git 工作流程                       |
 | 🖥️ [部署指南](DEPLOYMENT.md)                              | 部署到 Compute Engine 的步驟              |
+| 🎨 [介面標準元件](UI-Component.md)                        | 維持介面一致風格的標準色及元件              |
 | 🤝 [貢獻指南](CONTRIBUTING.md)                            | 如何參與專案開發                          |
 
 ---
