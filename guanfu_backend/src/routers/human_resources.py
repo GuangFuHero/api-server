@@ -13,7 +13,12 @@ from ..enum_serializer import (
 )
 from ..pin_related import generate_pin
 from ..api_key import require_modify_api_key
-from ..services.discord_webhook import send_discord_message
+from ..network import get_client_ip
+from ..services.discord_webhook import (
+    send_discord_message,
+    format_human_resource_notification,
+    format_human_resource_patch_notification,
+)
 
 router = APIRouter(
     prefix="/human_resources",
@@ -94,7 +99,9 @@ def list_human_resources(
     summary="建立人力需求",
 )
 async def create_human_resource(
-    resource_in: schemas.HumanResourceCreate, db: Session = Depends(get_db)
+    resource_in: schemas.HumanResourceCreate,
+    request: Request,
+    db: Session = Depends(get_db)
 ):
     """
     建立人力需求/角色
@@ -109,12 +116,21 @@ async def create_human_resource(
         db, models.HumanResource, obj_in=resource_in, valid_pin=generate_pin()
     )
 
-    # Send notification to Discord in the background
-    message_content = "新的志工人力需求已建立 ✨"
-    embed_data = resource_in.model_dump(mode="json")
-    asyncio.create_task(
-        send_discord_message(content=message_content, embed_data=embed_data)
+    # 取得真實客戶端 IP（考慮反向代理）
+    client_ip = get_client_ip(request)
+    user_agent = request.headers.get("user-agent", "unknown")
+
+    # 格式化通知訊息
+    message_content = format_human_resource_notification(
+        resource_data=resource_in,
+        resource_id=created_resource.id,
+        created_at=created_resource.created_at,
+        client_ip=client_ip,
+        user_agent=user_agent,
     )
+
+    # Send notification to Discord in the background
+    asyncio.create_task(send_discord_message(content=message_content))
 
     return created_resource
 
@@ -136,8 +152,11 @@ def get_human_resource(id: str, db: Session = Depends(get_db)):
     summary="更新特定人力需求",
     # dependencies=[Security(require_modify_api_key)],
 )
-def patch_human_resource(
-    id: str, resource_in: schemas.HumanResourcePatch, db: Session = Depends(get_db)
+async def patch_human_resource(
+    id: str,
+    resource_in: schemas.HumanResourcePatch,
+    request: Request,
+    db: Session = Depends(get_db)
 ):
     """
     更新人力需求/角色 (部分欄位)
@@ -175,4 +194,23 @@ def patch_human_resource(
                 status_code=400,
                 detail="headcount_got must be less than or equal to headcount_need.",
             )
-    return crud.update(db, db_obj=db_resource, obj_in=resource_in)
+
+    # 更新資源
+    updated_resource = crud.update(db, db_obj=db_resource, obj_in=resource_in)
+
+    # 取得真實客戶端 IP（考慮反向代理）
+    client_ip = get_client_ip(request)
+    user_agent = request.headers.get("user-agent", "unknown")
+
+    # 格式化並發送通知
+    message_content = format_human_resource_patch_notification(
+        resource_id=id,
+        resource=updated_resource,
+        client_ip=client_ip,
+        user_agent=user_agent,
+    )
+
+    # Send notification to Discord in the background
+    asyncio.create_task(send_discord_message(content=message_content))
+
+    return updated_resource
