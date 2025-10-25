@@ -13,6 +13,7 @@ from ..crud import (
 from ..database import get_db
 from ..api_key import require_modify_api_key
 from ..services.discord_webhook import send_discord_message
+from ..network import get_client_ip
 
 router = APIRouter(
     prefix="/supplies",
@@ -63,7 +64,7 @@ def list_supplies(
 @router.post(
     "", response_model=schemas.SupplyWithPin, status_code=201, summary="建立供應單"
 )
-async def create_supply(supply_in: schemas.SupplyCreate, db: Session = Depends(get_db)):
+async def create_supply(request: Request, supply_in: schemas.SupplyCreate, db: Session = Depends(get_db)):
     """
     建立供應單 (注意：同時建立 supply_items 的邏輯需在 crud 中客製化)
     """
@@ -71,11 +72,26 @@ async def create_supply(supply_in: schemas.SupplyCreate, db: Session = Depends(g
     created_supply = crud.create_supply_with_items(db, obj_in=supply_in)
 
     # Send Discord notification in background
-    message_content = "新的物資供應已建立 📦"
-    embed_data = supply_in.model_dump(mode="json")
-    asyncio.create_task(
-        send_discord_message(content=message_content, embed_data=embed_data)
+    ip_address = get_client_ip(request)
+    user_agent = request.headers.get("user-agent", "N/A")
+    
+    item_str = ""
+    if created_supply.supplies:
+        item = created_supply.supplies[0]
+        item_str = f"{item.name} x{item.total_number}"
+
+    message = (
+        f"物資需求出現了 🐝\n"
+        f"Name: {created_supply.name}\n"
+        f"ID: {created_supply.id}\n"
+        f"Phone: {created_supply.phone}\n"
+        f"Address: {created_supply.address}\n"
+        f"Item: {item_str}\n"
+        f"Notes: {created_supply.notes or ''}\n"
+        f"IP: {ip_address} (TW)\n"
+        f"User-Agent: {user_agent}"
     )
+    asyncio.create_task(send_discord_message(content=message))
 
     return created_supply
 
@@ -88,7 +104,7 @@ async def create_supply(supply_in: schemas.SupplyCreate, db: Session = Depends(g
     summary="更新供應單",
     # dependencies=[Security(require_modify_api_key)],
 )
-def patch_supply(id: str, supply_in: schemas.SupplyPatch, db: Session = Depends(get_db)):
+async def patch_supply(id: str, supply_in: schemas.SupplyPatch, request: Request, db: Session = Depends(get_db)):
     db_supply = crud.get_by_id(db, models.Supply, id)
     if db_supply is None:
         raise HTTPException(status_code=404, detail="Supply not found")
@@ -98,11 +114,35 @@ def patch_supply(id: str, supply_in: schemas.SupplyPatch, db: Session = Depends(
             status_code=400, detail="Completed supply orders cannot be edited."
         )
 
-    # PIN 檢核
-    # if db_supply.valid_pin and db_supply.valid_pin != supply_in.valid_pin:
-    #     raise HTTPException(status_code=400, detail="The PIN you entered is incorrect.")
+    updated_supply = crud.update(db, db_obj=db_supply, obj_in=supply_in)
 
-    return crud.update(db, db_obj=db_supply, obj_in=supply_in)
+    # Send Discord notification in background
+    ip_address = get_client_ip(request)
+    user_agent = request.headers.get("user-agent", "N/A")
+    
+    updates = []
+    if supply_in.name is not None:
+        updates.append(f"  - name: {supply_in.name}")
+    if supply_in.address is not None:
+        updates.append(f"  - address: {supply_in.address}")
+    if supply_in.phone is not None:
+        updates.append(f"  - phone: {supply_in.phone}")
+    if supply_in.notes is not None:
+        updates.append(f"  - notes: {supply_in.notes}")
+
+    fields_str = "\n".join(updates) if updates else "  - (無更新)"
+
+    message = (
+        f"有人更新物資需求了 (改單) ✏️\n"
+        f"資料庫ID: {id}\n"
+        f"更新欄位:\n{fields_str}\n"
+        f"IP: {ip_address} (TW)\n"
+        f"User-Agent: {user_agent}"
+    )
+    print(f"Sending Discord webhook from supplies PATCH: {message}")
+    asyncio.create_task(send_discord_message(content=message))
+
+    return updated_supply
 
 
 @router.get("/{id}", response_model=schemas.Supply, summary="取得特定供應單")
