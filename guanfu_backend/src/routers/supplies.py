@@ -12,7 +12,7 @@ from ..crud import (
 )
 from ..database import get_db
 from ..api_key import require_modify_api_key
-from ..services.discord_webhook import send_discord_message
+from ..services.discord_webhook import send_discord_message, format_supply_notification, format_supply_patch_notification
 from ..network import get_client_ip
 
 router = APIRouter(
@@ -75,21 +75,12 @@ async def create_supply(request: Request, supply_in: schemas.SupplyCreate, db: S
     ip_address = get_client_ip(request)
     user_agent = request.headers.get("user-agent", "N/A")
     
-    item_str = ""
-    if created_supply.supplies:
-        item = created_supply.supplies[0]
-        item_str = f"{item.name} x{item.total_number}"
-
-    message = (
-        f"物資需求出現了 🐝\n"
-        f"Name: {created_supply.name}\n"
-        f"ID: {created_supply.id}\n"
-        f"Phone: {created_supply.phone}\n"
-        f"Address: {created_supply.address}\n"
-        f"Item: {item_str}\n"
-        f"Notes: {created_supply.notes or ''}\n"
-        f"IP: {ip_address} (TW)\n"
-        f"User-Agent: {user_agent}"
+    message = format_supply_notification(
+        supply_data=supply_in,
+        supply_id=created_supply.id,
+        created_at=created_supply.created_at,
+        client_ip=ip_address,
+        user_agent=user_agent,
     )
     asyncio.create_task(send_discord_message(content=message))
 
@@ -120,26 +111,12 @@ async def patch_supply(id: str, supply_in: schemas.SupplyPatch, request: Request
     ip_address = get_client_ip(request)
     user_agent = request.headers.get("user-agent", "N/A")
     
-    updates = []
-    if supply_in.name is not None:
-        updates.append(f"  - name: {supply_in.name}")
-    if supply_in.address is not None:
-        updates.append(f"  - address: {supply_in.address}")
-    if supply_in.phone is not None:
-        updates.append(f"  - phone: {supply_in.phone}")
-    if supply_in.notes is not None:
-        updates.append(f"  - notes: {supply_in.notes}")
-
-    fields_str = "\n".join(updates) if updates else "  - (無更新)"
-
-    message = (
-        f"有人更新物資需求了 (改單) ✏️\n"
-        f"資料庫ID: {id}\n"
-        f"更新欄位:\n{fields_str}\n"
-        f"IP: {ip_address} (TW)\n"
-        f"User-Agent: {user_agent}"
+    message = format_supply_patch_notification(
+        supply_id=id,
+        updated_fields=supply_in,
+        client_ip=ip_address,
+        user_agent=user_agent,
     )
-    print(f"Sending Discord webhook from supplies PATCH: {message}")
     asyncio.create_task(send_discord_message(content=message))
 
     return updated_supply

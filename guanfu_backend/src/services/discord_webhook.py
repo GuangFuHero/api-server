@@ -6,11 +6,14 @@ Discord Webhook 服務
 
 import httpx
 import json
+import logging
 from datetime import datetime, timezone
 from typing import Optional, Union
 
 from ..config import settings
 from .. import schemas, models
+
+logger = logging.getLogger(__name__)
 
 
 def _format_timestamp(created_at: Union[int, float, datetime]) -> str:
@@ -221,11 +224,11 @@ async def send_discord_message(content: str, embed_data: Optional[dict] = None):
 
     async with httpx.AsyncClient() as client:
         try:
-            print(f"Sending Discord webhook: {message}")
+            logger.debug(f"Sending Discord webhook: {message}")
             response = await client.post(settings.DISCORD_WEBHOOK_URL, json=message)
             response.raise_for_status() # Raise an exception for bad status codes
-            print(f"Discord webhook sent successfully. Status: {response.status_code}")
+            logger.info(f"Discord webhook sent successfully. Status: {response.status_code}")
         except httpx.RequestError as e:
-            print(f"Error sending Discord webhook: {e}")
+            logger.error(f"Error sending Discord webhook: {e}")
         except httpx.HTTPStatusError as e:
-            print(f"Error response from Discord webhook: {e.response.status_code} - {e.response.text}")
+            logger.error(f"Error response from Discord webhook: {e.response.status_code} - {e.response.text}")
