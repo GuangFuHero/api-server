@@ -67,7 +67,7 @@ def format_human_resource_notification(
         notes_parts.append(resource_data.assignment_notes)
     notes = "\n".join(notes_parts) if notes_parts else "無"
 
-    message = f"""有人新增人力需求了 (開單) 🛠️
+    message = f"""有人新增人力需求了(開單) 🛠️
 標題: {resource_data.role_name}
 需求類型: {type_display}
 需求人數: {resource_data.headcount_need} {unit}
@@ -122,7 +122,7 @@ Phone: {phone}
 Address: {address}
 Item: {item_str}
 Notes: {notes}
-IP: {client_ip} (TW)
+IP: {client_ip}
 User-Agent: {user_agent}"""
 
     return message
@@ -151,7 +151,7 @@ def format_human_resource_patch_notification(
     message = f"""有人報名人力需求了 (報名) 👷🏻
 標題: {resource.role_name} ({resource_id})
 報名/需求人數: {resource.headcount_got}/{resource.headcount_need} {unit}
-IP: {client_ip} (TW)
+IP: {client_ip}
 User-Agent: {user_agent}"""
 
     return message
@@ -192,7 +192,7 @@ def format_supply_patch_notification(
 資料庫ID: {supply_id}
 更新欄位:
 {fields_str}
-IP: {client_ip} (TW)
+IP: {client_ip}
 User-Agent: {user_agent}"""
 
     return message

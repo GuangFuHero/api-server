@@ -118,7 +118,7 @@ async def create_human_resource(
 
     # 取得真實客戶端 IP（考慮反向代理）
     client_ip = get_client_ip(request)
-    user_agent = request.headers.get("user-agent", "unknown")
+    user_agent = request.headers.get("User-Agent", "unknown")
 
     # 格式化通知訊息
     message_content = format_human_resource_notification(
@@ -200,7 +200,7 @@ async def patch_human_resource(
 
     # 取得真實客戶端 IP（考慮反向代理）
     client_ip = get_client_ip(request)
-    user_agent = request.headers.get("user-agent", "unknown")
+    user_agent = request.headers.get("User-Agent", "unknown")
 
     # 格式化並發送通知
     message_content = format_human_resource_patch_notification(

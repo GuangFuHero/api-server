@@ -73,7 +73,7 @@ async def create_supply(request: Request, supply_in: schemas.SupplyCreate, db: S
 
     # Send Discord notification in background
     ip_address = get_client_ip(request)
-    user_agent = request.headers.get("user-agent", "unknown")
+    user_agent = request.headers.get("User-Agent", "unknown")
     
     message = format_supply_notification(
         supply_data=supply_in,
@@ -109,7 +109,7 @@ async def patch_supply(id: str, supply_in: schemas.SupplyPatch, request: Request
 
     # Send Discord notification in background
     ip_address = get_client_ip(request)
-    user_agent = request.headers.get("user-agent", "unknown")
+    user_agent = request.headers.get("User-Agent", "unknown")
     
     message = format_supply_patch_notification(
         supply_id=id,
