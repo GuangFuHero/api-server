@@ -210,6 +210,7 @@ async def send_discord_message(content: str, embed_data: Optional[dict] = None):
         如果 DISCORD_WEBHOOK_URL 未設定，函數將直接返回不執行任何操作
     """
     if not settings.DISCORD_WEBHOOK_URL:
+        logger.warning("Discord webhook URL not configured. Skipping webhook notification.")
         return
 
     message = {"content": content}
@@ -222,6 +223,8 @@ async def send_discord_message(content: str, embed_data: Optional[dict] = None):
             }
         ]
 
+    logger.info("Sending Discord webhook: content length=%d, embed=%s", 
+            len(content), "yes" if embed_data else "no")
     async with httpx.AsyncClient() as client:
         try:
             logger.debug(f"Sending Discord webhook: {message}")
@@ -231,4 +234,4 @@ async def send_discord_message(content: str, embed_data: Optional[dict] = None):
         except httpx.RequestError as e:
             logger.error(f"Error sending Discord webhook: {e}")
         except httpx.HTTPStatusError as e:
-            logger.error(f"Error response from Discord webhook: {e.response.status_code} - {e.response.text}")
+            logger.error(f"Error response from Discord webhook: {e.response.status_code} - {e.response.text")
