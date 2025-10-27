@@ -227,11 +227,10 @@ async def send_discord_message(content: str, embed_data: Optional[dict] = None):
             len(content), "yes" if embed_data else "no")
     async with httpx.AsyncClient() as client:
         try:
-            logger.debug(f"Sending Discord webhook: {message}")
             response = await client.post(settings.DISCORD_WEBHOOK_URL, json=message)
             response.raise_for_status()  # Raise an exception for bad status codes
             logger.info(f"Discord webhook sent successfully. Status: {response.status_code}")
         except httpx.RequestError as e:
             logger.error(f"Error sending Discord webhook: {e}")
         except httpx.HTTPStatusError as e:
-            logger.error(f"Error response from Discord webhook: {e.response.status_code} - {e.response.text")
+            logger.error(f"Error response from Discord webhook: {e.response.status_code} - {e.response.text}")
