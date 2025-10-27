@@ -1,8 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Security, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Security, Request
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List, Literal
-import asyncio
 
 from .. import crud, models, schemas
 from ..crud import (
@@ -64,7 +63,12 @@ def list_supplies(
 @router.post(
     "", response_model=schemas.SupplyWithPin, status_code=201, summary="建立供應單"
 )
-async def create_supply(request: Request, supply_in: schemas.SupplyCreate, db: Session = Depends(get_db)):
+async def create_supply(
+    request: Request,
+    supply_in: schemas.SupplyCreate,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
     """
     建立供應單 (注意：同時建立 supply_items 的邏輯需在 crud 中客製化)
     """
@@ -74,7 +78,7 @@ async def create_supply(request: Request, supply_in: schemas.SupplyCreate, db: S
     # Send Discord notification in background
     ip_address = get_client_ip(request)
     user_agent = request.headers.get("User-Agent", "unknown")
-    
+
     message = format_supply_notification(
         supply_data=supply_in,
         supply_id=created_supply.id,
@@ -82,7 +86,7 @@ async def create_supply(request: Request, supply_in: schemas.SupplyCreate, db: S
         client_ip=ip_address,
         user_agent=user_agent,
     )
-    asyncio.create_task(send_discord_message(content=message))
+    background_tasks.add_task(send_discord_message, content=message)
 
     return created_supply
 
@@ -95,7 +99,13 @@ async def create_supply(request: Request, supply_in: schemas.SupplyCreate, db: S
     summary="更新供應單",
     # dependencies=[Security(require_modify_api_key)],
 )
-async def patch_supply(id: str, supply_in: schemas.SupplyPatch, request: Request, db: Session = Depends(get_db)):
+async def patch_supply(
+    id: str,
+    supply_in: schemas.SupplyPatch,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
     db_supply = crud.get_by_id(db, models.Supply, id)
     if db_supply is None:
         raise HTTPException(status_code=404, detail="Supply not found")
@@ -106,7 +116,7 @@ async def patch_supply(id: str, supply_in: schemas.SupplyPatch, request: Request
         )
 
     updated_supply = crud.update(db, db_obj=db_supply, obj_in=supply_in)
-    
+
     # 重新載入完整的 Supply 物件（包含 supplies 關聯）
     updated_supply_with_items = (
         db.query(models.Supply)
@@ -118,7 +128,7 @@ async def patch_supply(id: str, supply_in: schemas.SupplyPatch, request: Request
     # Send Discord notification in background
     ip_address = get_client_ip(request)
     user_agent = request.headers.get("User-Agent", "unknown")
-    
+
     message = format_supply_patch_notification(
         supply_id=id,
         updated_supply=updated_supply_with_items,
@@ -126,7 +136,7 @@ async def patch_supply(id: str, supply_in: schemas.SupplyPatch, request: Request
         client_ip=ip_address,
         user_agent=user_agent,
     )
-    asyncio.create_task(send_discord_message(content=message))
+    background_tasks.add_task(send_discord_message, content=message)
 
     return updated_supply
 
@@ -152,6 +162,7 @@ async def update_supply(
     id: str,
     supply_item_in: List[schemas.SupplyItemUpdate],
     request: Request,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     """
@@ -160,11 +171,11 @@ async def update_supply(
     """
     merged = supply_merge_item_counts([item.model_dump() for item in supply_item_in])
     updated_supply = supply_batch_increment_received(db, id, merged)
-    
+
     # 構建物資更新通知訊息
     ip_address = get_client_ip(request)
     user_agent = request.headers.get("User-Agent", "unknown")
-    
+
     # 載入完整的 Supply 物件（包含 supplies 關聯）
     supply_with_items = (
         db.query(models.Supply)
@@ -172,16 +183,16 @@ async def update_supply(
         .filter(models.Supply.id == id)
         .first()
     )
-    
+
     if supply_with_items:
         # 構建更新項目列表
         updated_items = []
         for item_update in supply_item_in:
             item_name = next((item.name for item in supply_with_items.supplies if item.id == item_update.id), "未知物資")
             updated_items.append(f"  - {item_name}: +{item_update.count}")
-        
+
         updated_items_str = "\n".join(updated_items) if updated_items else "  - (無更新)"
-        
+
         message = f"""有人更新物資到貨數量了 📦
 資料庫ID: {id}
 聯絡人: {supply_with_items.name or '未提供'}
@@ -189,7 +200,7 @@ async def update_supply(
 {updated_items_str}
 IP: {ip_address}
 User-Agent: {user_agent}"""
-        
-        asyncio.create_task(send_discord_message(content=message))
-    
+
+        background_tasks.add_task(send_discord_message, content=message)
+
     return updated_supply

@@ -1,8 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Security, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Security, Request
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from typing import Optional, Literal
-import asyncio
 
 from .. import crud, models, schemas
 from ..database import get_db
@@ -101,6 +100,7 @@ def list_human_resources(
 async def create_human_resource(
     resource_in: schemas.HumanResourceCreate,
     request: Request,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
     """
@@ -130,7 +130,7 @@ async def create_human_resource(
     )
 
     # Send notification to Discord in the background
-    asyncio.create_task(send_discord_message(content=message_content))
+    background_tasks.add_task(send_discord_message, content=message_content)
 
     return created_resource
 
@@ -156,6 +156,7 @@ async def patch_human_resource(
     id: str,
     resource_in: schemas.HumanResourcePatch,
     request: Request,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
     """
@@ -211,6 +212,6 @@ async def patch_human_resource(
     )
 
     # Send notification to Discord in the background
-    asyncio.create_task(send_discord_message(content=message_content))
+    background_tasks.add_task(send_discord_message, content=message_content)
 
     return updated_resource
