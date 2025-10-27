@@ -188,7 +188,7 @@ def format_supply_patch_notification(
 
     fields_str = "\n".join(updates) if updates else "  - (無更新)"
 
-    message = f"""有人更新物資需求了 (改單) ✏️
+    message = f"""有人更新物資需求了 (物資提供) ✏️
 資料庫ID: {supply_id}
 更新欄位:
 {fields_str}
