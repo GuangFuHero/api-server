@@ -159,6 +159,7 @@ User-Agent: {user_agent}"""
 
 def format_supply_patch_notification(
     supply_id: str,
+    updated_supply: "models.Supply",
     updated_fields: schemas.SupplyPatch,
     client_ip: str,
     user_agent: str,
@@ -168,6 +169,7 @@ def format_supply_patch_notification(
 
     Args:
         supply_id: 資料庫 ID
+        updated_supply: 更新後的完整 Supply 物件
         updated_fields: 更新的欄位 (SupplyPatch schema)
         client_ip: 客戶端 IP
         user_agent: 使用者代理字串
@@ -187,11 +189,26 @@ def format_supply_patch_notification(
         updates.append(f"  - notes: {updated_fields.notes}")
 
     fields_str = "\n".join(updates) if updates else "  - (無更新)"
+    
+    # 構建物資項目資訊
+    supply_items = []
+    if hasattr(updated_supply, 'supplies') and updated_supply.supplies:
+        for item in updated_supply.supplies:
+            received = item.received_count if item.received_count is not None else 0
+            total = item.total_number
+            unit = item.unit if item.unit else ""
+            name = item.name if item.name else "未知物資"
+            supply_items.append(f"  - {name}: {received}/{total} {unit}")
+    
+    supply_items_str = "\n".join(supply_items) if supply_items else "  - (無物資項目)"
 
     message = f"""有人更新物資需求了 (物資提供) ✏️
 資料庫ID: {supply_id}
+聯絡人: {updated_supply.name or '未提供'}
 更新欄位:
 {fields_str}
+物資項目狀態:
+{supply_items_str}
 IP: {client_ip}
 User-Agent: {user_agent}"""
 
