@@ -100,9 +100,9 @@ async def create_supply(
     # dependencies=[Security(require_modify_api_key)],
 )
 async def patch_supply(
+    request: Request,
     id: str,
     supply_in: schemas.SupplyPatch,
-    request: Request,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
@@ -116,22 +116,17 @@ async def patch_supply(
         )
 
     updated_supply = crud.update(db, db_obj=db_supply, obj_in=supply_in)
-
-    # 重新載入完整的 Supply 物件（包含 supplies 關聯）
-    updated_supply_with_items = (
-        db.query(models.Supply)
-        .options(joinedload(models.Supply.supplies))
-        .filter(models.Supply.id == id)
-        .first()
-    )
+    
+    # 載入 supplies 關聯，避免重複查詢
+    db.refresh(updated_supply, ["supplies"])
 
     # Send Discord notification in background
     ip_address = get_client_ip(request)
     user_agent = request.headers.get("User-Agent", "unknown")
-
+    
     message = format_supply_patch_notification(
         supply_id=id,
-        updated_supply=updated_supply_with_items,
+        updated_supply=updated_supply,
         updated_fields=supply_in,
         client_ip=ip_address,
         user_agent=user_agent,
@@ -159,9 +154,9 @@ def get_supply(id: str, db: Session = Depends(get_db)):
 
 @router.post("/{id}", response_model=schemas.Supply)
 async def update_supply(
+    request: Request,
     id: str,
     supply_item_in: List[schemas.SupplyItemUpdate],
-    request: Request,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
@@ -171,31 +166,27 @@ async def update_supply(
     """
     merged = supply_merge_item_counts([item.model_dump() for item in supply_item_in])
     updated_supply = supply_batch_increment_received(db, id, merged)
+    
+    # 載入 supplies 關聯，避免額外查詢
+    db.refresh(updated_supply, ["supplies"])
 
     # 構建物資更新通知訊息
     ip_address = get_client_ip(request)
     user_agent = request.headers.get("User-Agent", "unknown")
 
-    # 載入完整的 Supply 物件（包含 supplies 關聯）
-    supply_with_items = (
-        db.query(models.Supply)
-        .options(joinedload(models.Supply.supplies))
-        .filter(models.Supply.id == id)
-        .first()
-    )
-
-    if supply_with_items:
-        # 構建更新項目列表
+    if updated_supply and hasattr(updated_supply, 'supplies'):
+        # 構建更新項目列表 - 使用字典避免 O(n*m) 複雜度
+        item_dict = {item.id: item.name for item in updated_supply.supplies}
         updated_items = []
         for item_update in supply_item_in:
-            item_name = next((item.name for item in supply_with_items.supplies if item.id == item_update.id), "未知物資")
+            item_name = item_dict.get(item_update.id, "未知物資")
             updated_items.append(f"  - {item_name}: +{item_update.count}")
 
         updated_items_str = "\n".join(updated_items) if updated_items else "  - (無更新)"
 
         message = f"""有人更新物資到貨數量了 📦
 資料庫ID: {id}
-聯絡人: {supply_with_items.name or '未提供'}
+聯絡人: {updated_supply.name or '未提供'}
 新增到貨數量:
 {updated_items_str}
 IP: {ip_address}

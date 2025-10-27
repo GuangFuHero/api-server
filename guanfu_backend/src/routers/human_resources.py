@@ -98,8 +98,8 @@ def list_human_resources(
     summary="建立人力需求",
 )
 async def create_human_resource(
-    resource_in: schemas.HumanResourceCreate,
     request: Request,
+    resource_in: schemas.HumanResourceCreate,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
@@ -153,9 +153,9 @@ def get_human_resource(id: str, db: Session = Depends(get_db)):
     # dependencies=[Security(require_modify_api_key)],
 )
 async def patch_human_resource(
+    request: Request,
     id: str,
     resource_in: schemas.HumanResourcePatch,
-    request: Request,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):

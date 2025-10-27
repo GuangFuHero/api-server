@@ -28,8 +28,26 @@ def _format_timestamp(created_at: Union[int, float, datetime]) -> str:
     """
     if isinstance(created_at, (int, float)):
         created_at = datetime.fromtimestamp(created_at, tz=timezone.utc)
+    elif isinstance(created_at, datetime) and created_at.tzinfo is None:
+        created_at = created_at.replace(tzinfo=timezone.utc)
 
     return created_at.strftime('%Y-%m-%d %H:%M:%S UTC')
+
+
+def _format_role_type_display(role_type: str, role_status: Optional[str] = None) -> str:
+    """
+    格式化角色類型顯示文字
+    
+    Args:
+        role_type: 角色類型
+        role_status: 角色狀態（可選）
+    
+    Returns:
+        str: 格式化後的角色類型顯示文字
+    """
+    if role_status:
+        return f"{role_type} / {role_status}"
+    return role_type
 
 
 def format_human_resource_notification(
@@ -56,7 +74,7 @@ def format_human_resource_notification(
     time_str = _format_timestamp(created_at)
 
     # 構建訊息
-    type_display = f"{resource_data.role_type} / {resource_data.role_status}" if resource_data.role_status else resource_data.role_type
+    type_display = _format_role_type_display(resource_data.role_type, resource_data.role_status)
 
     unit = resource_data.headcount_unit or "人"
 
@@ -246,7 +264,7 @@ async def send_discord_message(content: str, embed_data: Optional[dict] = None):
         try:
             response = await client.post(settings.DISCORD_WEBHOOK_URL, json=message)
             response.raise_for_status()  # Raise an exception for bad status codes
-            logger.info(f"Discord webhook sent successfully. Status: {response.status_code}")
+            logger.info("Discord webhook sent successfully. Status: %d", response.status_code)
         except httpx.RequestError as e:
             logger.error(f"Error sending Discord webhook: {e}")
         except httpx.HTTPStatusError as e:
