@@ -1,8 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Security, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Security, Request
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List, Literal
-import asyncio
 
 from .. import crud, models, schemas
 from ..crud import (
@@ -12,7 +11,8 @@ from ..crud import (
 )
 from ..database import get_db
 from ..api_key import require_modify_api_key
-from ..services.discord_webhook import send_discord_message
+from ..services.discord_webhook import send_discord_message, format_supply_notification, format_supply_patch_notification
+from ..network import get_client_ip
 
 router = APIRouter(
     prefix="/supplies",
@@ -63,7 +63,12 @@ def list_supplies(
 @router.post(
     "", response_model=schemas.SupplyWithPin, status_code=201, summary="建立供應單"
 )
-async def create_supply(supply_in: schemas.SupplyCreate, db: Session = Depends(get_db)):
+async def create_supply(
+    request: Request,
+    supply_in: schemas.SupplyCreate,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
     """
     建立供應單 (注意：同時建立 supply_items 的邏輯需在 crud 中客製化)
     """
@@ -71,11 +76,17 @@ async def create_supply(supply_in: schemas.SupplyCreate, db: Session = Depends(g
     created_supply = crud.create_supply_with_items(db, obj_in=supply_in)
 
     # Send Discord notification in background
-    message_content = "新的物資供應已建立 📦"
-    embed_data = supply_in.model_dump(mode="json")
-    asyncio.create_task(
-        send_discord_message(content=message_content, embed_data=embed_data)
+    ip_address = get_client_ip(request)
+    user_agent = request.headers.get("User-Agent", "unknown")
+
+    message = format_supply_notification(
+        supply_data=supply_in,
+        supply_id=created_supply.id,
+        created_at=created_supply.created_at,
+        client_ip=ip_address,
+        user_agent=user_agent,
     )
+    background_tasks.add_task(send_discord_message, content=message)
 
     return created_supply
 
@@ -88,7 +99,13 @@ async def create_supply(supply_in: schemas.SupplyCreate, db: Session = Depends(g
     summary="更新供應單",
     # dependencies=[Security(require_modify_api_key)],
 )
-def patch_supply(id: str, supply_in: schemas.SupplyPatch, db: Session = Depends(get_db)):
+async def patch_supply(
+    request: Request,
+    id: str,
+    supply_in: schemas.SupplyPatch,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
     db_supply = crud.get_by_id(db, models.Supply, id)
     if db_supply is None:
         raise HTTPException(status_code=404, detail="Supply not found")
@@ -98,11 +115,25 @@ def patch_supply(id: str, supply_in: schemas.SupplyPatch, db: Session = Depends(
             status_code=400, detail="Completed supply orders cannot be edited."
         )
 
-    # PIN 檢核
-    # if db_supply.valid_pin and db_supply.valid_pin != supply_in.valid_pin:
-    #     raise HTTPException(status_code=400, detail="The PIN you entered is incorrect.")
+    updated_supply = crud.update(db, db_obj=db_supply, obj_in=supply_in)
+    
+    # 載入 supplies 關聯，避免重複查詢
+    db.refresh(updated_supply, ["supplies"])
 
-    return crud.update(db, db_obj=db_supply, obj_in=supply_in)
+    # Send Discord notification in background
+    ip_address = get_client_ip(request)
+    user_agent = request.headers.get("User-Agent", "unknown")
+    
+    message = format_supply_patch_notification(
+        supply_id=id,
+        updated_supply=updated_supply,
+        updated_fields=supply_in,
+        client_ip=ip_address,
+        user_agent=user_agent,
+    )
+    background_tasks.add_task(send_discord_message, content=message)
+
+    return updated_supply
 
 
 @router.get("/{id}", response_model=schemas.Supply, summary="取得特定供應單")
@@ -122,9 +153,11 @@ def get_supply(id: str, db: Session = Depends(get_db)):
 
 
 @router.post("/{id}", response_model=schemas.Supply)
-def update_supply(
+async def update_supply(
+    request: Request,
     id: str,
     supply_item_in: List[schemas.SupplyItemUpdate],
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     """
@@ -133,4 +166,32 @@ def update_supply(
     """
     merged = supply_merge_item_counts([item.model_dump() for item in supply_item_in])
     updated_supply = supply_batch_increment_received(db, id, merged)
+    
+    # 載入 supplies 關聯，避免額外查詢
+    db.refresh(updated_supply, ["supplies"])
+
+    # 構建物資更新通知訊息
+    ip_address = get_client_ip(request)
+    user_agent = request.headers.get("User-Agent", "unknown")
+
+    if updated_supply and hasattr(updated_supply, 'supplies'):
+        # 構建更新項目列表 - 使用字典避免 O(n*m) 複雜度
+        item_dict = {item.id: item.name for item in updated_supply.supplies}
+        updated_items = []
+        for item_update in supply_item_in:
+            item_name = item_dict.get(item_update.id, "未知物資")
+            updated_items.append(f"  - {item_name}: +{item_update.count}")
+
+        updated_items_str = "\n".join(updated_items) if updated_items else "  - (無更新)"
+
+        message = f"""有人更新物資到貨數量了 📦
+資料庫ID: {id}
+聯絡人: {updated_supply.name or '未提供'}
+新增到貨數量:
+{updated_items_str}
+IP: {ip_address}
+User-Agent: {user_agent}"""
+
+        background_tasks.add_task(send_discord_message, content=message)
+
     return updated_supply
