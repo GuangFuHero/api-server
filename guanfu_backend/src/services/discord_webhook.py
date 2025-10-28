@@ -266,6 +266,11 @@ async def send_discord_message(content: str, embed_data: Optional[dict] = None):
             response.raise_for_status()  # Raise an exception for bad status codes
             logger.info("Discord webhook sent successfully. Status: %d", response.status_code)
         except httpx.RequestError as e:
-            logger.error(f"Error sending Discord webhook: {e}")
+            logger.error("Error sending Discord webhook: %s", e, exc_info=True)
         except httpx.HTTPStatusError as e:
-            logger.error(f"Error response from Discord webhook: {e.response.status_code} - {e.response.text}")
+            logger.error(
+                "Error response from Discord webhook: %d - %s",
+                e.response.status_code,
+                e.response.text,
+                exc_info=True,
+            )
